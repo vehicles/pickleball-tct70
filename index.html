@@ -345,7 +345,7 @@ window.addEventListener('DOMContentLoaded', () => {
 function toggleAdminAuth() {
     if (isAdmin) {
         isAdmin = false;
-        alert("🔒 Đã thoát quyền Trọng tài (Chuyển về Chế độ Xem).");
+        alert("🔒 Đã thoát quyền BTC/Trọng tài (Chuyển về Chế độ Xem).");
     } else {
         const pin = prompt("Nhập mã PIN Trọng tài/BTC:");
         if (pin === ADMIN_PIN) {
@@ -364,7 +364,7 @@ function updateAccessControl() {
         authBtn.innerText = "🔓 Đã Đăng Nhập";
         authBtn.style.backgroundColor = "#27ae60";
     } else {
-        authBtn.innerText = "🔑 Trọng tài";
+        authBtn.innerText = "🔑 BTC/Trọng tài";
         authBtn.style.backgroundColor = "#34495e";
     }
 
