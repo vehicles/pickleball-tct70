@@ -2,18 +2,17 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <!-- Cấu hình hiển thị chuẩn Mobile Responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bốc thăm, Điều hành & BXH Pickleball TCT70</title>
+    <title>Điều Hành Pickleball TCT70 - Vòng Bảng & Vòng Trong</title>
     <!-- Thư viện xuất file PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- Nhúng thư viện Firebase Realtime Database SDK -->
+    <!-- Nhúng Firebase Realtime Database SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // ⚠️ BẠN THAY ĐOẠN MÃ CẤU HÌNH FIREBASE CỦA BẠN VÀO ĐÂY:
+        // ⚠️ BẠN THAY MÃ CẤU HÌNH FIREBASE CỦA BẠN VÀO ĐÂY:
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -27,16 +26,25 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         window.dbRef = ref(db, 'pickleball_matches');
+        window.dbKnockoutRef = ref(db, 'pickleball_knockout');
         window.dbSet = set;
-        window.dbOnValue = onValue;
 
-        // Lắng nghe dữ liệu tỷ số Real-time từ Firebase
+        // Lắng nghe dữ liệu Vòng bảng
         onValue(window.dbRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 matchData = data;
                 renderCourts();
                 updateStandings();
+            }
+        });
+
+        // Lắng nghe dữ liệu Vòng trong
+        onValue(window.dbKnockoutRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                knockoutData = data;
+                renderKnockoutMatches();
             }
         });
     </script>
@@ -57,6 +65,11 @@
         th { background-color: #1a5276; color: white; text-align: center; }
         tr:nth-child(even) { background-color: #f9f9f9; }
 
+        /* THANH CHỌN TAB CHÍNH (VÒNG BẢNG VS VÒNG TRONG) */
+        .main-tab-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; border-bottom: 3px solid #2980b9; padding-bottom: 10px; }
+        .btn-tab { padding: 12px 20px; font-weight: bold; font-size: 15px; border: none; background: #eef7fc; color: #1a5276; border-radius: 8px 8px 0 0; cursor: pointer; flex: 1; text-align: center; }
+        .btn-tab.active { background: #2980b9; color: white; }
+
         .control-panel { background: #eef7fc; border: 1px solid #bce1f7; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
         .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 8px; }
         .input-box { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-weight: bold; font-size: 15px; }
@@ -75,7 +88,6 @@
         .court-box { border: 2px dashed #f39c12; background: #fef9e7; padding: 15px; border-radius: 10px; text-align: center; }
         .court-title { font-weight: bold; font-size: 18px; color: #d35400; margin-bottom: 8px; }
 
-        /* BỐ CỤC BỘ TĂNG GIẢM ĐIỂM + VÀ - DÀNH CHO ĐIỆN THOẠI */
         .court-score-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 10px 0; }
         .team-score-control { display: flex; align-items: center; gap: 5px; }
         .btn-step { width: 44px; height: 44px; font-size: 22px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
@@ -89,6 +101,10 @@
         .finish-btn { background: #2980b9; }
         .court-players { background: #ffffff; border: 1px solid #f39c12; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 14px; text-align: left; line-height: 1.5; }
         .winner-badge { background: #27ae60; color: white; font-weight: bold; padding: 8px 10px; border-radius: 6px; display: block; margin-top: 5px; text-align: center; font-size: 15px; }
+
+        /* KHUNG VÒNG TRONG (KNOCKOUT) */
+        .serie-title { background: #8e44ad; color: white; padding: 10px; border-radius: 6px; font-size: 18px; font-weight: bold; text-align: center; margin-top: 20px; }
+        .knockout-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px; }
 
         .standings-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px; }
         .standing-box { border: 1px solid #2980b9; border-radius: 8px; padding: 12px; background: #f4f9fc; overflow-x: auto; }
@@ -135,117 +151,139 @@
         </div>
         <div class="header-title">
             <h1>GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</h1>
-            <div class="subtitle">BỐC THĂM, ĐIỀU HÀNH VÀ BẢNG XẾP HẠNG</div>
+            <div class="subtitle">ĐIỀU HÀNH PICKLEBALL TCT70</div>
         </div>
     </div>
 
-    <div class="control-panel">
-        <strong>⚙ KHAI BÁO:</strong>
-        <div class="grid-inputs">
-            <div>
-                <label><b>Số VĐV dự kiến:</b></label>
-                <input type="number" id="targetPlayerCount" value="30" min="1" max="200" class="input-box" oninput="syncPlayersWithTarget()">
+    <!-- THANH CHỌN TAB: VÒNG BẢNG HOẶC VÒNG TRONG -->
+    <div class="main-tab-selector">
+        <button id="tabGroupBtn" class="btn-tab active" onclick="switchMainTab('group')">🏓 VÒNG BẢNG (3 LƯỢT)</button>
+        <button id="tabKnockoutBtn" class="btn-tab" onclick="switchMainTab('knockout')">🏆 VÒNG TRONG (SERIE A & B)</button>
+    </div>
+
+    <!-- NỘI DUNG TAB VÒNG BẢNG -->
+    <div id="groupStageTab">
+        <div class="control-panel">
+            <strong>⚙ CẤU HÌNH ĐỘI HÌNH VÀ THAM SỐ:</strong>
+            <div class="grid-inputs">
+                <div>
+                    <label><b>Số VĐV dự kiến:</b></label>
+                    <input type="number" id="targetPlayerCount" value="30" min="1" max="200" class="input-box" oninput="syncPlayersWithTarget()">
+                </div>
+                <div>
+                    <label><b>VĐV / 1 Team:</b></label>
+                    <input type="number" id="teamSize" value="5" min="2" class="input-box" oninput="recalculateTeamsCount()">
+                </div>
+                <div>
+                    <label><b>Số Team tính:</b></label>
+                    <input type="number" id="customTeamCount" value="6" class="input-box">
+                </div>
             </div>
-            <div>
-                <label><b>VĐV / 1 Team:</b></label>
-                <input type="number" id="teamSize" value="5" min="2" class="input-box" oninput="recalculateTeamsCount()">
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 TẢI DATA SHEET</button>
+            <button class="btn btn-draw" onclick="drawTeams()">🎲 BỐC THĂM TEAM</button>
+            <button class="btn btn-pdf" onclick="exportToPDF()">📄 XUẤT PDF</button>
+        </div>
+
+        <div id="statusMsg" class="status-msg"></div>
+
+        <h2>1. Danh Sách VĐV Đăng Ký (Thực tế: <span id="playerCount">0</span> VĐV)</h2>
+        <div style="max-height: 180px; overflow-y: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">STT</th>
+                        <th>Họ và tên</th>
+                        <th style="width: 70px;">Giới tính</th>
+                        <th style="width: 80px;">Trình độ</th>
+                    </tr>
+                </thead>
+                <tbody id="playerTableBody">
+                    <tr><td colspan="4" style="text-align:center;">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="round-selector">
+            <button id="btnRound1" class="btn-round active" onclick="selectRound(1)">LƯỢT 1</button>
+            <button id="btnRound2" class="btn-round" onclick="selectRound(2)">LƯỢT 2</button>
+            <button id="btnRound3" class="btn-round" onclick="selectRound(3)">LƯỢT 3</button>
+        </div>
+
+        <div>
+            <h3 id="roundTitle">🏓 ĐIỀU HÀNH 2 SÂN - LƯỢT 1</h3>
+            <p id="roundSubtitle" style="text-align: center; color: #666; font-size: 12px; margin-top: -5px;"></p>
+            <div id="courtsGrid" class="courts-container"></div>
+        </div>
+
+        <div style="margin-top: 25px;">
+            <h3>🏆 BẢNG XẾP HẠNG BẢNG A & BẢNG B</h3>
+            <div class="standings-container">
+                <div class="standing-box">
+                    <div class="standing-title">BẢNG XẾP HẠNG - BẢNG A</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hạng</th>
+                                <th>Đội</th>
+                                <th>Thắng</th>
+                                <th>Thua</th>
+                                <th>Điểm</th>
+                                <th>Hiệu Số</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standingTableA">
+                            <tr><td colspan="6" style="text-align:center;">Chưa có dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="standing-box">
+                    <div class="standing-title" style="color:#d35400;">BẢNG XẾP HẠNG - BẢNG B</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hạng</th>
+                                <th>Đội</th>
+                                <th>Thắng</th>
+                                <th>Thua</th>
+                                <th>Điểm</th>
+                                <th>Hiệu Số</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standingTableB">
+                            <tr><td colspan="6" style="text-align:center;">Chưa có dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div>
-                <label><b>Số Team tính:</b></label>
-                <input type="number" id="customTeamCount" value="6" class="input-box">
-            </div>
+        </div>
+
+        <div id="pdfExportArea">
+            <h2 style="margin-top: 25px;">2. Kết Quả Chia Đội Bảng A & Bảng B</h2>
+            <div class="group-header">BẢNG A (Team 1, Team 2, Team 3)</div>
+            <div id="groupAResult" class="teams-grid"></div>
+
+            <div class="group-header" style="background:#e67e22; margin-top:20px;">BẢNG B (Team 4, Team 5, Team 6)</div>
+            <div id="groupBResult" class="teams-grid"></div>
         </div>
     </div>
 
-    <div class="button-group">
-        <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 Tải dữ liệu</button>
-        <button class="btn btn-draw" onclick="drawTeams()">🎲 Bốc thăm TEAM</button>
-        <button class="btn btn-pdf" onclick="exportToPDF()">📄 Xuất PDF</button>
-    </div>
-
-    <div id="statusMsg" class="status-msg"></div>
-
-    <h2>1. Danh Sách VĐV Đăng Ký (Thực tế: <span id="playerCount">0</span> VĐV)</h2>
-    <div style="max-height: 180px; overflow-y: auto;">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40px;">STT</th>
-                    <th>Họ và tên</th>
-                    <th style="width: 70px;">Giới tính</th>
-                    <th style="width: 80px;">Trình độ</th>
-                </tr>
-            </thead>
-            <tbody id="playerTableBody">
-                <tr><td colspan="4" style="text-align:center;">Đang tải dữ liệu...</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="round-selector">
-        <button id="btnRound1" class="btn-round active" onclick="selectRound(1)">LƯỢT 1</button>
-        <button id="btnRound2" class="btn-round" onclick="selectRound(2)">LƯỢT 2</button>
-        <button id="btnRound3" class="btn-round" onclick="selectRound(3)">LƯỢT 3</button>
-    </div>
-
-    <div>
-        <h3 id="roundTitle">🏓 ĐIỀU HÀNH 2 SÂN - LƯỢT 1</h3>
-        <p id="roundSubtitle" style="text-align: center; color: #666; font-size: 12px; margin-top: -5px;"></p>
-        
-        <div id="courtsGrid" class="courts-container"></div>
-    </div>
-
-    <div style="margin-top: 25px;">
-        <h3>🏆 BẢNG XẾP HẠNG BẢNG A & BẢNG B</h3>
-        <div class="standings-container">
-            <div class="standing-box">
-                <div class="standing-title">BẢNG XẾP HẠNG - BẢNG A</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Hạng</th>
-                            <th>Đội</th>
-                            <th>Thắng</th>
-                            <th>Thua</th>
-                            <th>Điểm</th>
-                            <th>Hiệu Số</th>
-                        </tr>
-                    </thead>
-                    <tbody id="standingTableA">
-                        <tr><td colspan="6" style="text-align:center;">Chưa có dữ liệu...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="standing-box">
-                <div class="standing-title" style="color:#d35400;">BẢNG XẾP HẠNG - BẢNG B</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Hạng</th>
-                            <th>Đội</th>
-                            <th>Thắng</th>
-                            <th>Thua</th>
-                            <th>Điểm</th>
-                            <th>Hiệu Số</th>
-                        </tr>
-                    </thead>
-                    <tbody id="standingTableB">
-                        <tr><td colspan="6" style="text-align:center;">Chưa có dữ liệu...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+    <!-- NỘI DUNG TAB VÒNG TRONG (SERIE A & SERIE B) -->
+    <div id="knockoutStageTab" style="display: none;">
+        <!-- SERIE A -->
+        <div class="serie-title">🥇 SERIE A (BÁN KẾT & CHUNG KẾT SERIE A)</div>
+        <div class="knockout-grid" id="serieAGrid">
+            <!-- Bán kết 1, Bán kết 2 và Chung kết Serie A -->
         </div>
-    </div>
 
-    <div id="pdfExportArea">
-        <h2 style="margin-top: 25px;">2. Kết Quả Chia Đội Bảng A & Bảng B</h2>
-        
-        <div class="group-header">BẢNG A (Team 1, Team 2, Team 3)</div>
-        <div id="groupAResult" class="teams-grid"></div>
-
-        <div class="group-header" style="background:#e67e22; margin-top:20px;">BẢNG B (Team 4, Team 5, Team 6)</div>
-        <div id="groupBResult" class="teams-grid"></div>
+        <!-- SERIE B -->
+        <div class="serie-title" style="background: #d35400; margin-top: 30px;">🥈 SERIE B (CHUNG KẾT SERIE B)</div>
+        <div class="knockout-grid" id="serieBGrid">
+            <!-- Chung kết Serie B -->
+        </div>
     </div>
 </div>
 
@@ -262,6 +300,14 @@ let matchData = {
     1: [{ score1: 0, score2: 0, finished: false }, { score1: 0, score2: 0, finished: false }],
     2: [{ score1: 0, score2: 0, finished: false }, { score1: 0, score2: 0, finished: false }],
     3: [{ score1: 0, score2: 0, finished: false }, { score1: 0, score2: 0, finished: false }]
+};
+
+// DỮ LIỆU CÁC TRẬN VÒNG TRONG (KNOCKOUT)
+let knockoutData = {
+    sf1: { score1: 0, score2: 0, finished: false }, // Bán kết 1: Nhất A vs Nhì B
+    sf2: { score1: 0, score2: 0, finished: false }, // Bán kết 2: Nhất B vs Nhì A
+    finalA: { score1: 0, score2: 0, finished: false }, // Chung kết Serie A
+    finalB: { score1: 0, score2: 0, finished: false }  // Chung kết Serie B: Ba A vs Ba B
 };
 
 const roundSchedule = {
@@ -294,9 +340,30 @@ window.addEventListener('DOMContentLoaded', () => {
     renderCourts();
 });
 
+function switchMainTab(tab) {
+    if (tab === 'group') {
+        document.getElementById('groupStageTab').style.display = 'block';
+        document.getElementById('knockoutStageTab').style.display = 'none';
+        document.getElementById('tabGroupBtn').classList.add('active');
+        document.getElementById('tabKnockoutBtn').classList.remove('active');
+    } else {
+        document.getElementById('groupStageTab').style.display = 'none';
+        document.getElementById('knockoutStageTab').style.display = 'block';
+        document.getElementById('tabGroupBtn').classList.remove('active');
+        document.getElementById('tabKnockoutBtn').classList.add('active');
+        renderKnockoutMatches();
+    }
+}
+
 function syncFirebaseData() {
     if (window.dbSet && window.dbRef) {
         window.dbSet(window.dbRef, matchData);
+    }
+}
+
+function syncFirebaseKnockoutData() {
+    if (window.dbSet && window.dbKnockoutRef) {
+        window.dbSet(window.dbKnockoutRef, knockoutData);
     }
 }
 
@@ -526,7 +593,6 @@ function selectRound(roundNum) {
     renderCourts();
 }
 
-// BỔ SUNG CÁC NÚT TĂNG NÚT GIẢM NĂNG ĐỘNG
 function renderCourts() {
     const courtsDiv = document.getElementById('courtsGrid');
     courtsDiv.innerHTML = '';
@@ -576,9 +642,7 @@ function renderCourts() {
         courtCard.innerHTML = `
             <div class="court-title">${match.title}</div>
             
-            <!-- BỘ NÚT BẤM + - VÀ Ô TỶ SỐ CHO ĐIỆN THOẠI -->
             <div class="court-score-container">
-                <!-- Điều khiển điểm Đội 1 -->
                 <div class="team-score-control">
                     <button class="btn-step btn-minus" onclick="adjustScore(${c}, 1, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
                     <input type="number" class="score-input" value="${mData.score1}" onchange="updateMatchScore(${c}, 1, this.value)" ${mData.finished ? 'disabled' : ''}>
@@ -587,7 +651,6 @@ function renderCourts() {
                 
                 <span style="font-size:22px; font-weight:bold;"> - </span>
 
-                <!-- Điều khiển điểm Đội 2 -->
                 <div class="team-score-control">
                     <button class="btn-step btn-minus" onclick="adjustScore(${c}, 2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
                     <input type="number" class="score-input" value="${mData.score2}" onchange="updateMatchScore(${c}, 2, this.value)" ${mData.finished ? 'disabled' : ''}>
@@ -607,7 +670,6 @@ function renderCourts() {
     }
 }
 
-// HÀM TĂNG GIẢM ĐIỂM BẰNG NÚT + VÀ -
 function adjustScore(courtIdx, teamNum, delta) {
     const mData = matchData[currentRound][courtIdx];
     if (teamNum === 1) {
@@ -644,8 +706,9 @@ function resetMatch(courtIdx) {
     syncFirebaseData();
 }
 
+// HÀM TÍNH BẢNG XẾP HẠNG VÀ TRẢ VỀ CÁC ĐỘI DẪN ĐẦU
 function updateStandings() {
-    if (generatedTeams.length < 6) return;
+    if (generatedTeams.length < 6) return [];
 
     let stats = generatedTeams.map(t => ({
         name: t.name,
@@ -688,6 +751,8 @@ function updateStandings() {
 
     renderStandingTable('standingTableA', groupAStats);
     renderStandingTable('standingTableB', groupBStats);
+
+    return { groupA: groupAStats, groupB: groupBStats };
 }
 
 function renderStandingTable(tableId, groupStats) {
@@ -706,6 +771,119 @@ function renderStandingTable(tableId, groupStats) {
         `;
         tbody.appendChild(tr);
     });
+}
+
+// TỰ ĐỘNG VẼ CÁC TRẬN ĐẤU VÒNG TRONG (SERIE A & B)
+function renderKnockoutMatches() {
+    const standings = updateStandings();
+    const gA = standings.groupA || [{name: 'Nhất A'}, {name: 'Nhì A'}, {name: 'Ba A'}];
+    const gB = standings.groupB || [{name: 'Nhất B'}, {name: 'Nhì B'}, {name: 'Ba B'}];
+
+    // Đội tham gia Bán kết Serie A
+    const teamA1 = gA[0]?.name || 'Nhất A';
+    const teamA2 = gA[1]?.name || 'Nhì A';
+    const teamB1 = gB[0]?.name || 'Nhất B';
+    const teamB2 = gB[1]?.name || 'Nhì B';
+
+    // Đội tham gia Chung kết Serie B
+    const teamA3 = gA[2]?.name || 'Ba A';
+    const teamB3 = gB[2]?.name || 'Ba B';
+
+    // Xác định đội thắng Bán kết để vào Chung kết Serie A
+    let winnerSF1 = 'Thắng BK 1';
+    let winnerSF2 = 'Thắng BK 2';
+
+    if (knockoutData.sf1.finished) {
+        winnerSF1 = knockoutData.sf1.score1 > knockoutData.sf1.score2 ? teamA1 : teamB2;
+    }
+    if (knockoutData.sf2.finished) {
+        winnerSF2 = knockoutData.sf2.score1 > knockoutData.sf2.score2 ? teamB1 : teamA2;
+    }
+
+    // Hiển thị Serie A
+    const serieAGrid = document.getElementById('serieAGrid');
+    serieAGrid.innerHTML = `
+        ${createKnockoutBoxHTML('sf1', 'BÁN KẾT 1 (SERIE A)', teamA1, teamB2, knockoutData.sf1)}
+        ${createKnockoutBoxHTML('sf2', 'BÁN KẾT 2 (SERIE A)', teamB1, teamA2, knockoutData.sf2)}
+        ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (TRANH VÔ ĐỊCH)', winnerSF1, winnerSF2, knockoutData.finalA)}
+    `;
+
+    // Hiển thị Serie B
+    const serieBGrid = document.getElementById('serieBGrid');
+    serieBGrid.innerHTML = `
+        ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B', teamA3, teamB3, knockoutData.finalB)}
+    `;
+}
+
+function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData) {
+    let winnerText = '';
+    if (mData.finished) {
+        if (mData.score1 > mData.score2) {
+            winnerText = `<div class="winner-badge">🏆 VÔ ĐỊCH / THẮNG: ${team1Name} (${mData.score1} - ${mData.score2})</div>`;
+        } else if (mData.score2 > mData.score1) {
+            winnerText = `<div class="winner-badge">🏆 VÔ ĐỊCH / THẮNG: ${team2Name} (${mData.score2} - ${mData.score1})</div>`;
+        } else {
+            winnerText = `<div class="winner-badge" style="background:#e67e22;">🤝 TRẬN HOÀ (${mData.score1} - ${mData.score2})</div>`;
+        }
+    }
+
+    return `
+        <div class="court-box">
+            <div class="court-title">${title}</div>
+            <div style="font-size:14px; margin-bottom:8px;"><b>${team1Name}</b> VS <b>${team2Name}</b></div>
+
+            <div class="court-score-container">
+                <div class="team-score-control">
+                    <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 1, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
+                    <input type="number" class="score-input" value="${mData.score1}" onchange="updateKnockoutScore('${matchKey}', 1, this.value)" ${mData.finished ? 'disabled' : ''}>
+                    <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 1, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
+                </div>
+                
+                <span style="font-size:22px; font-weight:bold;"> - </span>
+
+                <div class="team-score-control">
+                    <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
+                    <input type="number" class="score-input" value="${mData.score2}" onchange="updateKnockoutScore('${matchKey}', 2, this.value)" ${mData.finished ? 'disabled' : ''}>
+                    <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 2, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
+                <button class="score-btn finish-btn" onclick="toggleFinishKnockoutMatch('${matchKey}')">${mData.finished ? 'Mở Lại' : 'Chốt Trận'}</button>
+                <button class="score-btn reset-btn" onclick="resetKnockoutMatch('${matchKey}')">Reset</button>
+            </div>
+            ${winnerText}
+        </div>
+    `;
+}
+
+function adjustKnockoutScore(matchKey, teamNum, delta) {
+    const mData = knockoutData[matchKey];
+    if (teamNum === 1) mData.score1 = Math.max(0, (mData.score1 || 0) + delta);
+    if (teamNum === 2) mData.score2 = Math.max(0, (mData.score2 || 0) + delta);
+    renderKnockoutMatches();
+    syncFirebaseKnockoutData();
+}
+
+function updateKnockoutScore(matchKey, teamNum, val) {
+    const scoreVal = parseInt(val) || 0;
+    if (teamNum === 1) knockoutData[matchKey].score1 = scoreVal;
+    if (teamNum === 2) knockoutData[matchKey].score2 = scoreVal;
+    renderKnockoutMatches();
+    syncFirebaseKnockoutData();
+}
+
+function toggleFinishKnockoutMatch(matchKey) {
+    const mData = knockoutData[matchKey];
+    mData.finished = !mData.finished;
+    renderKnockoutMatches();
+    syncFirebaseKnockoutData();
+}
+
+function resetKnockoutMatch(matchKey) {
+    knockoutData[matchKey] = { score1: 0, score2: 0, finished: false };
+    renderKnockoutMatches();
+    syncFirebaseKnockoutData();
 }
 
 function exportToPDF() {
