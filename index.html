@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <!-- Cấu hình hiển thị chuẩn Mobile Responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bốc Thăm, Điều Hành 2 Sân & BXH Pickleball TCT70</title>
+    <title>Bốc thăm, điều hành và BXH Pickleball TCT70</title>
     <!-- Thư viện hỗ trợ xuất file PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -78,6 +78,10 @@
             .header-logo img { max-height: 60px; }
             .header-title h1 { font-size: 16px; }
             .header-title .subtitle { font-size: 11px; }
+            
+            /* TỰ ĐỘNG ẨN NÚT XUẤT PDF TRÊN ĐIỆN THOẠI */
+            .btn-pdf { display: none !important; }
+
             .round-selector { flex-direction: row; }
             .btn-round { font-size: 13px; padding: 8px 5px; }
             .court-box { padding: 10px; }
@@ -97,7 +101,7 @@
             <img id="logoImage" src="" alt="Logo Kỷ niệm 70 năm Khoa Toán - Cơ - Tin học">
         </div>
         <div class="header-title">
-            <h1>BỐC THĂM, ĐIỀU HÀNH 2 SÂN & BXH</h1>
+            <h1>BỐC THĂM, ĐIỀU HÀNH & BXH</h1>
             <div class="subtitle">GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</div>
         </div>
     </div>
@@ -122,8 +126,8 @@
     </div>
 
     <div class="button-group">
-        <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 TẢI DATA SHEET</button>
-        <button class="btn btn-draw" onclick="drawTeams()">🎲 BỐC THĂM TEAM</button>
+        <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 Tải dữ liệu</button>
+        <button class="btn btn-draw" onclick="drawTeams()">🎲 Bốc thăm TEAM</button>
         <button class="btn btn-pdf" onclick="exportToPDF()">📄 XUẤT PDF</button>
     </div>
 
