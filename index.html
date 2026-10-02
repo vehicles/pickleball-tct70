@@ -32,7 +32,7 @@
         window.dbTeamsRef = ref(db, 'pickleball_teams');
         window.dbSet = set;
 
-        // Lắng nghe dữ liệu Vòng bảng Real-time
+        // LẮNG NGHE REAL-TIME TỶ SỐ VÒNG BẢNG (DÀNH CHO CẢ BTC & KHÁN GIẢ)
         onValue(window.dbRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -42,22 +42,18 @@
             }
         });
 
-        // Lắng nghe dữ liệu Vòng trong Real-time
+        // LẮNG NGHE REAL-TIME VÒNG TRONG (DÀNH CHO CẢ BTC & KHÁN GIẢ)
         onValue(window.dbKnockoutRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                knockoutData = Object.assign({
-                    sf1: { score1: 0, score2: 0, finished: false },
-                    sf2: { score1: 0, score2: 0, finished: false },
-                    finalA: { score1: 0, score2: 0, finished: false },
-                    bronzeA: { score1: 0, score2: 0, finished: false },
-                    finalB: { score1: 0, score2: 0, finished: false }
-                }, data);
-                renderKnockoutMatches();
+                knockoutData = Object.assign(getEmptyKnockoutData(), data);
+            } else {
+                knockoutData = getEmptyKnockoutData();
             }
+            renderKnockoutMatches();
         });
 
-        // Lắng nghe dữ liệu Đội đã chốt Real-time
+        // LẮNG NGHE REAL-TIME DANH SÁCH TEAM & TRẠNG THÁI CHỐT (DÀNH CHO CẢ BTC & KHÁN GIẢ)
         onValue(window.dbTeamsRef, (snapshot) => {
             const data = snapshot.val();
             if (data && data.teams && data.teams.length > 0) {
@@ -183,11 +179,11 @@
                 <img id="logoImage" src="" alt="Logo Kỷ niệm 70 năm Khoa Toán - Cơ - Tin học">
             </div>
             <div class="header-title">
-                <h1>GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</h1>
-                <div class="subtitle">ĐIỀU HÀNH PICKLEBALL TCT70</div>
+                <h1>ĐIỀU HÀNH PICKLEBALL TCT70</h1>
+                <div class="subtitle">GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</div>
             </div>
         </div>
-        <button id="authBtn" class="btn-auth" onclick="toggleAuthRole()">🔑 Đăng nhập</button>
+        <button id="authBtn" class="btn-auth" onclick="toggleAuthRole()">🔑 Khán giả</button>
     </div>
 
     <div id="mainTabSelector" class="main-tab-selector">
@@ -288,13 +284,17 @@ let currentRound = 1;
 let roundSchedule = [];
 let matchData = {};
 
-let knockoutData = {
-    sf1: { score1: 0, score2: 0, finished: false },
-    sf2: { score1: 0, score2: 0, finished: false },
-    finalA: { score1: 0, score2: 0, finished: false },
-    bronzeA: { score1: 0, score2: 0, finished: false },
-    finalB: { score1: 0, score2: 0, finished: false }
-};
+function getEmptyKnockoutData() {
+    return {
+        sf1: { score1: 0, score2: 0, finished: false },
+        sf2: { score1: 0, score2: 0, finished: false },
+        finalA: { score1: 0, score2: 0, finished: false },
+        bronzeA: { score1: 0, score2: 0, finished: false },
+        finalB: { score1: 0, score2: 0, finished: false }
+    };
+}
+
+let knockoutData = getEmptyKnockoutData();
 
 const fixedSchedule6Teams = {
     1: {
@@ -449,27 +449,21 @@ function updateAccessControl() {
     renderKnockoutMatches();
 }
 
+// XÓA ĐỒNG BỘ DỮ LIỆU LÊN FIREBASE VÀ TỰ ĐỘNG CHUYỂN MÀN HÌNH KHÁN GIẢ
 function resetAllData() {
     if (currentRole !== 'btc') {
         alert("❌ Chỉ Ban tổ chức mới có quyền thực hiện thao tác này!");
         return;
     }
 
-    const confirmReset = confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả chia đội và điểm số các trận đấu để làm lại từ đầu không?");
+    const confirmReset = confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả chia đội và điểm số không?");
     if (!confirmReset) return;
 
     isTeamsLocked = false;
     generatedTeams = [];
+    knockoutData = getEmptyKnockoutData();
 
     recalculateTeamsCount();
-
-    knockoutData = {
-        sf1: { score1: 0, score2: 0, finished: false },
-        sf2: { score1: 0, score2: 0, finished: false },
-        finalA: { score1: 0, score2: 0, finished: false },
-        bronzeA: { score1: 0, score2: 0, finished: false },
-        finalB: { score1: 0, score2: 0, finished: false }
-    };
 
     if (window.dbSet) {
         if (window.dbTeamsRef) window.dbSet(window.dbTeamsRef, { teams: [], locked: false });
@@ -477,14 +471,10 @@ function resetAllData() {
         if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData);
     }
 
-    renderResultsByGroups([]);
-    renderCourts();
-    updateStandings();
-    updateLockStatusUI();
-
     alert("✅ Đã xóa toàn bộ dữ liệu thành công!");
 }
 
+// CHỐT DANH SÁCH & ĐỒNG BỘ NGHUYÊN TRẠNG LÊN FIREBASE KHÁN GIẢ
 function toggleLockTeams() {
     if (currentRole !== 'btc') return;
     if (generatedTeams.length === 0) {
@@ -501,7 +491,6 @@ function toggleLockTeams() {
         });
     }
 
-    updateLockStatusUI();
     alert(isTeamsLocked ? "✅ Đã CHỐT danh sách VĐV!" : "🔓 Đã MỞ LẠI danh sách VĐV!");
 }
 
@@ -518,6 +507,7 @@ function updateLockStatusUI() {
     }
 }
 
+// BỐC THĂM ĐỘI VÀ ĐỒNG BỘ TỰ ĐỘNG LÊN MÀN HÌNH KHÁN GIẢ
 function drawTeams() {
     if (currentRole !== 'btc') return;
     if (isTeamsLocked) {
@@ -565,10 +555,15 @@ function drawTeams() {
 
     generatedTeams.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
     
+    // ĐỒNG BỘ DỮ LIỆU TEAM MỚI CHIA LÊN FIREBASE
+    if (window.dbSet && window.dbTeamsRef) {
+        window.dbSet(window.dbTeamsRef, {
+            teams: generatedTeams,
+            locked: false
+        });
+    }
+
     generateSchedule();
-    renderResultsByGroups(generatedTeams);
-    renderCourts();
-    updateStandings();
 }
 
 function renderCourts() {
@@ -900,7 +895,6 @@ function switchMainTab(tab) {
     }
 }
 
-// BỔ SUNG TRẬN TRANH HẠNG 3 - 4 SERIE A
 function renderKnockoutMatches() {
     const standings = updateStandings();
     if (!standings) return;
@@ -936,17 +930,21 @@ function renderKnockoutMatches() {
     }
 
     const serieAGrid = document.getElementById('serieAGrid');
-    serieAGrid.innerHTML = `
-        ${createKnockoutBoxHTML('sf1', 'BÁN KẾT 1 (SERIE A)', teamA1, teamB2, knockoutData.sf1 || {score1:0, score2:0, finished:false})}
-        ${createKnockoutBoxHTML('sf2', 'BÁN KẾT 2 (SERIE A)', teamB1, teamA2, knockoutData.sf2 || {score1:0, score2:0, finished:false})}
-        ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA (SERIE A)', loserSF1, loserSF2, knockoutData.bronzeA || {score1:0, score2:0, finished:false})}
-        ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (TRANH VÔ ĐỊCH)', winnerSF1, winnerSF2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
-    `;
+    if (serieAGrid) {
+        serieAGrid.innerHTML = `
+            ${createKnockoutBoxHTML('sf1', 'BÁN KẾT 1 (SERIE A)', teamA1, teamB2, knockoutData.sf1 || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('sf2', 'BÁN KẾT 2 (SERIE A)', teamB1, teamA2, knockoutData.sf2 || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA (SERIE A)', loserSF1, loserSF2, knockoutData.bronzeA || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (TRANH VÔ ĐỊCH)', winnerSF1, winnerSF2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+        `;
+    }
 
     const serieBGrid = document.getElementById('serieBGrid');
-    serieBGrid.innerHTML = `
-        ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B', teamA3, teamB3, knockoutData.finalB || {score1:0, score2:0, finished:false})}
-    `;
+    if (serieBGrid) {
+        serieBGrid.innerHTML = `
+            ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B', teamA3, teamB3, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+        `;
+    }
 }
 
 function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData) {
