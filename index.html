@@ -408,7 +408,7 @@ function toggleAuthRole() {
         currentRole = 'guest';
         alert("🔒 Đã chuyển về giao diện Khán giả.");
     } else {
-        const pin = prompt("Nhập mã PIN (1234: Trọng tài | 1956: BTC):");
+        const pin = prompt("Nhập mật khẩu:");
         if (pin === PIN_BTC) {
             currentRole = 'btc';
             alert("👑 Đã đăng nhập vai trò BAN TỔ CHỨC!");
