@@ -54,12 +54,20 @@
         // Lắng nghe dữ liệu Đội đã chốt Real-time
         onValue(window.dbTeamsRef, (snapshot) => {
             const data = snapshot.val();
-            if (data) {
-                generatedTeams = data.teams || [];
+            if (data && data.teams && data.teams.length > 0) {
+                generatedTeams = data.teams;
                 isTeamsLocked = data.locked || false;
                 document.getElementById('customTeamCount').value = generatedTeams.length || 6;
                 generateSchedule();
                 renderResultsByGroups(generatedTeams);
+                renderCourts();
+                updateStandings();
+                updateLockStatusUI();
+            } else {
+                // Nếu dữ liệu trên Firebase rỗng (sau khi bấm Xóa)
+                generatedTeams = [];
+                isTeamsLocked = false;
+                renderResultsByGroups([]);
                 renderCourts();
                 updateStandings();
                 updateLockStatusUI();
@@ -131,7 +139,6 @@
         .standing-box { border: 1px solid #2980b9; border-radius: 8px; padding: 12px; background: #f4f9fc; overflow-x: auto; }
         .standing-title { font-weight: bold; font-size: 16px; color: #1a5276; text-align: center; margin-bottom: 8px; }
 
-        .group-header { background: #2980b9; color: white; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 16px; margin-top: 20px; text-align: center; }
         .teams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
         .team-card { border: 1px solid #ccc; border-radius: 8px; padding: 12px; background-color: #fff; border-top: 5px solid #2980b9; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
         .team-title { font-weight: bold; font-size: 16px; color: #1a5276; display: flex; justify-content: space-between; margin-bottom: 8px; }
@@ -406,7 +413,6 @@ function toggleAuthRole() {
     updateAccessControl();
 }
 
-// CẬP NHẬT GIAO DIỆN PHÂN QUYỀN VÀ ẨN DANH SÁCH VĐV CHO TRỌNG TÀI
 function updateAccessControl() {
     const authBtn = document.getElementById('authBtn');
     if (currentRole === 'btc') {
@@ -425,7 +431,6 @@ function updateAccessControl() {
         el.style.display = (currentRole === 'btc') ? '' : 'none';
     });
 
-    // ẨN DANH SÁCH VĐV NẾU LÀ TRỌNG TÀI
     const playerSection = document.getElementById('playerListSection');
     if (playerSection) {
         playerSection.style.display = (currentRole === 'referee') ? 'none' : 'block';
@@ -435,7 +440,7 @@ function updateAccessControl() {
     renderKnockoutMatches();
 }
 
-// XÓA TOÀN BỘ DỮ LIỆU ĐỂ BỐC THĂM LẠI
+// XÓA TOÀN BỘ DỮ LIỆU CẢ TRÊN PHÍM VÀ TRÊN FIREBASE
 function resetAllData() {
     if (currentRole !== 'btc') {
         alert("❌ Chỉ Ban tổ chức mới có quyền thực hiện thao tác này!");
@@ -445,10 +450,21 @@ function resetAllData() {
     const confirmReset = confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả chia đội và tỷ số trận đấu để bốc thăm lại từ đầu không?");
     if (!confirmReset) return;
 
+    // 1. Reset bộ nhớ local
     isTeamsLocked = false;
     generatedTeams = [];
 
-    generateSchedule();
+    // 2. Khởi tạo lại cấu trúc trận đấu rỗng
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
+    if (totalTeams === 6) {
+        matchData = {
+            1: [{ score1: 0, score2: 0, finished: false }, { score1: 0, score2: 0, finished: false }],
+            2: [{ score1: 0, score2: 0, finished: false }, { score1: 0, score2: 0, finished: false }],
+            3: [{ score1: 0, score2: 0, finished: false }, { score1: 0, score2: 0, finished: false }]
+        };
+    } else {
+        generateSchedule();
+    }
 
     knockoutData = {
         sf1: { score1: 0, score2: 0, finished: false },
@@ -457,18 +473,20 @@ function resetAllData() {
         finalB: { score1: 0, score2: 0, finished: false }
     };
 
+    // 3. Xóa triệt để trên Firebase bằng cách ghi đè dữ liệu rỗng
     if (window.dbSet) {
         if (window.dbTeamsRef) window.dbSet(window.dbTeamsRef, { teams: [], locked: false });
         if (window.dbRef) window.dbSet(window.dbRef, matchData);
         if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData);
     }
 
-    renderResultsByGroups(generatedTeams);
+    // 4. Cập nhật ngay lập tức giao diện
+    renderResultsByGroups([]);
     renderCourts();
     updateStandings();
     updateLockStatusUI();
 
-    alert("✅ Đã xóa toàn bộ dữ liệu thành công! Bạn có thể tiến hành Bốc thăm lại.");
+    alert("✅ Đã xóa toàn bộ dữ liệu chia bảng & điểm số trận đấu thành công!");
 }
 
 function toggleLockTeams() {
@@ -751,7 +769,7 @@ function updateStandings() {
     const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
     const container = document.getElementById('standingsContainer');
 
-    if (generatedTeams.length < totalTeams) {
+    if (!generatedTeams || generatedTeams.length < totalTeams) {
         container.innerHTML = '<p style="text-align:center;">Chưa có đủ dữ liệu đội bóng...</p>';
         return;
     }
@@ -1124,20 +1142,21 @@ function renderInputTable(players) {
     });
 }
 
-// ==========================================
-// HÀM RENDER KẾT QUẢ CHIA ĐỘI (ĐÃ SỬA LỖI LAYOUT GRID)
-// ==========================================
+// RENDER KẾT QUẢ CHIA ĐỘI ĐÃ SỬA LỖI LAYOUT GRID
 function renderResultsByGroups(teams) {
     const grid = document.getElementById('teamsResultGrid');
     if (!grid) return;
     grid.innerHTML = '';
 
+    if (!teams || teams.length === 0) {
+        grid.innerHTML = '<p style="text-align:center; color:#7f8c8d; font-style:italic;">Chưa có dữ liệu chia đội...</p>';
+        return;
+    }
+
     const totalTeams = teams.length;
 
     if (totalTeams === 6) {
-        // TRƯỜNG HỢP 6 TEAM: TÁCH RIÊNG 2 KHỐI BẢNG A VÀ BẢNG B
         grid.innerHTML = `
-            <!-- KHỐI BẢNG A -->
             <div class="group-container" style="margin-bottom: 25px;">
                 <div class="group-header" style="background:#2980b9; color:white; padding:12px; border-radius:8px; font-weight:bold; font-size:16px; text-align:center; margin-bottom:15px;">
                     BẢNG A (Team 1, Team 2, Team 3)
@@ -1145,7 +1164,6 @@ function renderResultsByGroups(teams) {
                 <div id="groupAResult" class="teams-grid"></div>
             </div>
 
-            <!-- KHỐI BẢNG B -->
             <div class="group-container">
                 <div class="group-header" style="background:#e67e22; color:white; padding:12px; border-radius:8px; font-weight:bold; font-size:16px; text-align:center; margin-bottom:15px;">
                     BẢNG B (Team 4, Team 5, Team 6)
@@ -1166,7 +1184,6 @@ function renderResultsByGroups(teams) {
             }
         });
     } else {
-        // TRƯỜNG HỢP KHÁC 6 TEAM (VÍ DỤ 3 TEAM ĐẤU VÒNG TRÒN)
         const singleGrid = document.createElement('div');
         singleGrid.className = 'teams-grid';
         teams.forEach(team => {
