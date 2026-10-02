@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Điều Hành Pickleball TCT70</title>
+    <!-- Thư viện xuất PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
+    <!-- Nhúng Firebase Realtime Database SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // Cấu hình Firebase thực tế dự án pickleball-tct70
         const firebaseConfig = {
           apiKey: "AIzaSyBpEqXWixeZM0ecwr_yL13t9SGfseRtgEY",
           authDomain: "pickleball-tct70.firebaseapp.com",
@@ -30,6 +33,7 @@
         window.dbConfigRef = ref(db, 'pickleball_config');
         window.dbSet = set;
 
+        // Lắng nghe dữ liệu Vòng bảng Real-time
         onValue(window.dbRef, (snapshot) => {
             const data = snapshot.val();
             matchData = data || {};
@@ -37,12 +41,14 @@
             updateStandings();
         });
 
+        // Lắng nghe dữ liệu Vòng trong Real-time
         onValue(window.dbKnockoutRef, (snapshot) => {
             const data = snapshot.val();
             knockoutData = Object.assign(getEmptyKnockoutData(), data || {});
             renderKnockoutMatches();
         });
 
+        // Lắng nghe dữ liệu Đội đã chốt Real-time
         onValue(window.dbTeamsRef, (snapshot) => {
             const data = snapshot.val();
             if (data && data.teams && data.teams.length > 0) {
@@ -60,9 +66,10 @@
             updateLockStatusUI();
         });
 
+        // Lắng nghe Cấu hình Điểm kết thúc Real-time (Mặc định 25 điểm)
         onValue(window.dbConfigRef, (snapshot) => {
             const data = snapshot.val();
-            winningScore = (data && data.winningScore) ? parseInt(data.winningScore) : 50;
+            winningScore = (data && data.winningScore) ? parseInt(data.winningScore) : 25;
             const inputEl = document.getElementById('winningScoreInput');
             if (inputEl) inputEl.value = winningScore;
             renderCourts();
@@ -72,7 +79,7 @@
 
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 10px; background-color: #f4f7f6; color: #333; }
-        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         .header-container { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px; border-bottom: 2px solid #eef7fc; padding-bottom: 10px; }
         .header-left { display: flex; align-items: center; gap: 15px; }
@@ -109,32 +116,32 @@
         .btn-round { padding: 10px 18px; font-weight: bold; font-size: 14px; border: 2px solid #e67e22; background: white; color: #d35400; border-radius: 6px; cursor: pointer; flex: 1; min-height: 44px; }
         .btn-round.active { background: #e67e22; color: white; }
 
-        .courts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px; }
-        .court-box { border: 2px dashed #f39c12; background: #fef9e7; padding: 15px; border-radius: 10px; text-align: center; }
-        .court-title { font-weight: bold; font-size: 18px; color: #d35400; margin-bottom: 8px; }
+        .courts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 15px; }
+        .court-box { border: 2px dashed #f39c12; background: #fef9e7; padding: 12px; border-radius: 10px; text-align: center; }
+        .court-title { font-weight: bold; font-size: 16px; color: #d35400; margin-bottom: 6px; }
 
-        .court-score-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 10px 0; }
-        .team-score-control { display: flex; align-items: center; gap: 5px; }
-        .btn-step { width: 44px; height: 44px; font-size: 22px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
+        .court-score-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0; }
+        .team-score-control { display: flex; align-items: center; gap: 4px; }
+        .btn-step { width: 40px; height: 40px; font-size: 20px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
         .btn-minus { background-color: #e74c3c; }
         .btn-plus { background-color: #27ae60; }
         .btn-step:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .score-input { width: 55px; height: 44px; font-size: 24px; text-align: center; font-weight: bold; border: 2px solid #e67e22; border-radius: 6px; background: white; }
-        .score-btn { padding: 10px 16px; font-size: 14px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; background: #27ae60; color: white; margin: 4px; min-height: 44px; }
+        .score-input { width: 50px; height: 40px; font-size: 22px; text-align: center; font-weight: bold; border: 2px solid #e67e22; border-radius: 6px; background: white; }
+        .score-btn { padding: 8px 12px; font-size: 13px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; background: #27ae60; color: white; margin: 3px; min-height: 40px; }
         .reset-btn { background: #7f8c8d; }
         .finish-btn { background: #2980b9; }
-        .court-players { background: #ffffff; border: 1px solid #f39c12; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 14px; text-align: left; line-height: 1.5; }
-        .winner-badge { background: #27ae60; color: white; font-weight: bold; padding: 8px 10px; border-radius: 6px; display: block; margin-top: 5px; text-align: center; font-size: 15px; }
+        .court-players { background: #ffffff; border: 1px solid #f39c12; padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 13px; text-align: left; line-height: 1.4; }
+        .winner-badge { background: #27ae60; color: white; font-weight: bold; padding: 6px 8px; border-radius: 6px; display: block; margin-top: 5px; text-align: center; font-size: 14px; }
 
         .serie-title { background: #8e44ad; color: white; padding: 10px; border-radius: 6px; font-size: 18px; font-weight: bold; text-align: center; margin-top: 20px; }
-        .knockout-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px; }
+        .knockout-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 15px; }
 
         .standings-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px; }
         .standing-box { border: 1px solid #2980b9; border-radius: 8px; padding: 12px; background: #f4f9fc; overflow-x: auto; }
         .standing-title { font-weight: bold; font-size: 16px; color: #1a5276; text-align: center; margin-bottom: 8px; }
 
-        .teams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
+        .teams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 15px; }
         .team-card { border: 1px solid #ccc; border-radius: 8px; padding: 12px; background-color: #fff; border-top: 5px solid #2980b9; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
         .team-title { font-weight: bold; font-size: 16px; color: #1a5276; display: flex; justify-content: space-between; margin-bottom: 8px; }
         
@@ -156,11 +163,11 @@
             .round-selector { flex-direction: row; }
             .btn-round { font-size: 13px; padding: 8px 5px; }
             .court-box { padding: 10px; }
-            .court-title { font-size: 16px; }
-            .score-input { width: 50px; height: 40px; font-size: 20px; }
-            .btn-step { width: 40px; height: 40px; font-size: 20px; }
-            .score-btn { font-size: 13px; padding: 8px 12px; flex: 1; }
-            th, td { padding: 6px 3px; font-size: 12px; }
+            .court-title { font-size: 15px; }
+            .score-input { width: 45px; height: 38px; font-size: 18px; }
+            .btn-step { width: 38px; height: 38px; font-size: 18px; }
+            .score-btn { font-size: 12px; padding: 6px 10px; flex: 1; }
+            th, td { padding: 5px 3px; font-size: 12px; }
         }
     </style>
 </head>
@@ -203,7 +210,7 @@
                 </div>
                 <div>
                     <label><b>Điểm kết thúc:</b></label>
-                    <input type="number" id="winningScoreInput" value="50" min="10" max="100" class="input-box" onchange="updateWinningScore(this.value)">
+                    <input type="number" id="winningScoreInput" value="25" min="10" max="100" class="input-box" onchange="updateWinningScore(this.value)">
                 </div>
             </div>
         </div>
@@ -251,7 +258,7 @@
         </div>
 
         <div id="pdfExportArea">
-            <h2 style="margin-top: 25px;">Kết Quả Chia Đội <span id="lockBadge" style="font-size:14px; color:#27ae60;"></span></h2>
+            <h2 style="margin-top: 25px;">2. Kết Quả Chia Đội <span id="lockBadge" style="font-size:14px; color:#27ae60;"></span></h2>
             <div id="teamsResultGrid"></div>
         </div>
     </div>
@@ -272,7 +279,7 @@ const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxURxi_T_rXH
 const PIN_REFEREE = "1234";
 const PIN_BTC = "1956";
 
-let winningScore = 50; 
+let winningScore = 25; // Cấu hình mặc định 25 điểm
 let currentRole = 'guest';
 let isTeamsLocked = false;
 
@@ -308,7 +315,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function updateWinningScore(val) {
     if (currentRole !== 'btc') return;
-    const score = parseInt(val) || 50;
+    const score = parseInt(val) || 25;
     winningScore = score;
     if (window.dbSet && window.dbConfigRef) {
         window.dbSet(window.dbConfigRef, { winningScore: score });
@@ -334,52 +341,53 @@ function generateSchedule() {
         roundSchedule = [
             {
                 roundNum: 1,
-                subtitle: "Sân 1 (Bảng A): Team 1 vs Team 2 | Sân 2 (Bảng B): Team 4 vs Team 5",
+                subtitle: "Sân 1: Team 1 vs Team 2 | Sân 2: Team 4 vs Team 5",
                 courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 4 }]
             },
             {
                 roundNum: 2,
-                subtitle: "Sân 1 (BẢNG A): Team 1 vs Team 3 | Sân 2 (BẢNG B): Team 4 vs Team 6",
+                subtitle: "Sân 1: Team 1 vs Team 3 | Sân 2: Team 4 vs Team 6",
                 courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 5 }]
             },
             {
                 roundNum: 3,
-                subtitle: "Sân 1 (BẢNG A): Team 2 vs Team 3 | Sân 2 (BẢNG B): Team 5 vs Team 6",
+                subtitle: "Sân 1: Team 2 vs Team 3 | Sân 2: Team 5 vs Team 6",
                 courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 1, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 5 }]
             }
         ];
     } else if (totalTeams === 8) {
         mainTabSelector.style.display = 'flex';
+        // 8 TEAM CHIA 2 BẢNG THI ĐẤU TRÊN 4 SÂN ĐỒNG THỜI
         roundSchedule = [
             {
                 roundNum: 1,
-                subtitle: "Sân 1 (Bảng A): Team 1 vs Team 2 | Sân 2 (Bảng B): Team 5 vs Team 6",
-                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 5 }]
+                subtitle: "Lượt 1: Bảng A (Sân 1 & 2) | Bảng B (Sân 3 & 4)",
+                courts: [
+                    { title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 },
+                    { title: "SÂN 2 (BẢNG A)", t1Idx: 2, t2Idx: 3 },
+                    { title: "SÂN 3 (BẢNG B)", t1Idx: 4, t2Idx: 5 },
+                    { title: "SÂN 4 (BẢNG B)", t1Idx: 6, t2Idx: 7 }
+                ]
             },
             {
                 roundNum: 2,
-                subtitle: "Sân 1 (BẢNG A): Team 3 vs Team 4 | Sân 2 (BẢNG B): Team 7 vs Team 8",
-                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 2, t2Idx: 3 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 6, t2Idx: 7 }]
+                subtitle: "Lượt 2: Bảng A (Sân 1 & 2) | Bảng B (Sân 3 & 4)",
+                courts: [
+                    { title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 },
+                    { title: "SÂN 2 (BẢNG A)", t1Idx: 1, t2Idx: 3 },
+                    { title: "SÂN 3 (BẢNG B)", t1Idx: 4, t2Idx: 6 },
+                    { title: "SÂN 4 (BẢNG B)", t1Idx: 5, t2Idx: 7 }
+                ]
             },
             {
                 roundNum: 3,
-                subtitle: "Sân 1 (BẢNG A): Team 1 vs Team 3 | Sân 2 (BẢNG B): Team 5 vs Team 7",
-                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 6 }]
-            },
-            {
-                roundNum: 4,
-                subtitle: "Sân 1 (BẢNG A): Team 2 vs Team 4 | Sân 2 (BẢNG B): Team 6 vs Team 8",
-                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 1, t2Idx: 3 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 5, t2Idx: 7 }]
-            },
-            {
-                roundNum: 5,
-                subtitle: "Sân 1 (BẢNG A): Team 1 vs Team 4 | Sân 2 (BẢNG B): Team 5 vs Team 8",
-                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 3 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 7 }]
-            },
-            {
-                roundNum: 6,
-                subtitle: "Sân 1 (BẢNG A): Team 2 vs Team 3 | Sân 2 (BẢNG B): Team 6 vs Team 7",
-                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 1, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 5, t2Idx: 6 }]
+                subtitle: "Lượt 3: Bảng A (Sân 1 & 2) | Bảng B (Sân 3 & 4)",
+                courts: [
+                    { title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 3 },
+                    { title: "SÂN 2 (BẢNG A)", t1Idx: 1, t2Idx: 2 },
+                    { title: "SÂN 3 (BẢNG B)", t1Idx: 4, t2Idx: 7 },
+                    { title: "SÂN 4 (BẢNG B)", t1Idx: 5, t2Idx: 6 }
+                ]
             }
         ];
     } else {
@@ -475,7 +483,7 @@ function resetAllData() {
 
     isTeamsLocked = false;
     generatedTeams = [];
-    winningScore = 50;
+    winningScore = 25;
     knockoutData = getEmptyKnockoutData();
 
     recalculateTeamsCount();
@@ -484,7 +492,7 @@ function resetAllData() {
         if (window.dbTeamsRef) window.dbSet(window.dbTeamsRef, { teams: [], locked: false });
         if (window.dbRef) window.dbSet(window.dbRef, {});
         if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData);
-        if (window.dbConfigRef) window.dbSet(window.dbConfigRef, { winningScore: 50 });
+        if (window.dbConfigRef) window.dbSet(window.dbConfigRef, { winningScore: 25 });
     }
 
     alert("✅ Đã xóa toàn bộ dữ liệu thành công!");
@@ -622,7 +630,7 @@ function renderCourts() {
                     <input type="number" class="score-input" value="${mData.score1}" onchange="updateMatchScore(${cIdx}, 1, this.value)" ${mData.finished ? 'disabled' : ''}>
                     <button class="btn-step btn-plus" onclick="adjustScore(${cIdx}, 1, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
                 </div>
-                <span style="font-size:22px; font-weight:bold;"> - </span>
+                <span style="font-size:20px; font-weight:bold;"> - </span>
                 <div class="team-score-control">
                     <button class="btn-step btn-minus" onclick="adjustScore(${cIdx}, 2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
                     <input type="number" class="score-input" value="${mData.score2}" onchange="updateMatchScore(${cIdx}, 2, this.value)" ${mData.finished ? 'disabled' : ''}>
@@ -633,7 +641,7 @@ function renderCourts() {
                 <button class="score-btn finish-btn" onclick="toggleFinishMatch(${cIdx})">${mData.finished ? 'Mở Lại' : 'Chốt Trận'}</button>
                 <button class="score-btn reset-btn" onclick="resetMatch(${cIdx})">Reset</button>
             </div>
-        ` : `<div style="font-size:28px; font-weight:bold; color:#e67e22; margin:10px 0;">${mData.score1} - ${mData.score2}</div>`;
+        ` : `<div style="font-size:26px; font-weight:bold; color:#e67e22; margin:8px 0;">${mData.score1} - ${mData.score2}</div>`;
 
         const courtCard = document.createElement('div');
         courtCard.className = 'court-box';
@@ -862,10 +870,10 @@ function renderKnockoutMatches() {
     const serieAGrid = document.getElementById('serieAGrid');
     if (serieAGrid) {
         serieAGrid.innerHTML = `
-            ${createKnockoutBoxHTML('sf1A', 'BÁN KẾT 1 (SERIE A)', teamA1, teamB2, knockoutData.sf1A || {score1:0, score2:0, finished:false})}
-            ${createKnockoutBoxHTML('sf2A', 'BÁN KẾT 2 (SERIE A)', teamB1, teamA2, knockoutData.sf2A || {score1:0, score2:0, finished:false})}
-            ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA (SERIE A)', loserSF1A, loserSF2A, knockoutData.bronzeA || {score1:0, score2:0, finished:false})}
-            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (TRANH VÔ ĐỊCH)', winnerSF1A, winnerSF2A, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('sf1A', 'BÁN KẾT 1 (SERIE A - SÂN 1)', teamA1, teamB2, knockoutData.sf1A || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('sf2A', 'BÁN KẾT 2 (SERIE A - SÂN 2)', teamB1, teamA2, knockoutData.sf2A || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA (SERIE A - SÂN 2)', loserSF1A, loserSF2A, knockoutData.bronzeA || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 1)', winnerSF1A, winnerSF2A, knockoutData.finalA || {score1:0, score2:0, finished:false})}
         `;
     }
 
@@ -897,10 +905,10 @@ function renderKnockoutMatches() {
             }
 
             serieBGrid.innerHTML = `
-                ${createKnockoutBoxHTML('sf1B', 'BÁN KẾT 1 (SERIE B)', teamA3, teamB4, knockoutData.sf1B || {score1:0, score2:0, finished:false})}
-                ${createKnockoutBoxHTML('sf2B', 'BÁN KẾT 2 (SERIE B)', teamB3, teamA4, knockoutData.sf2B || {score1:0, score2:0, finished:false})}
-                ${createKnockoutBoxHTML('bronzeB', 'TRANH HẠNG BA (SERIE B)', loserSF1B, loserSF2B, knockoutData.bronzeB || {score1:0, score2:0, finished:false})}
-                ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B', winnerSF1B, winnerSF2B, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('sf1B', 'BÁN KẾT 1 (SERIE B - SÂN 3)', teamA3, teamB4, knockoutData.sf1B || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('sf2B', 'BÁN KẾT 2 (SERIE B - SÂN 4)', teamB3, teamA4, knockoutData.sf2B || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('bronzeB', 'TRANH HẠNG BA (SERIE B - SÂN 4)', loserSF1B, loserSF2B, knockoutData.bronzeB || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B (SÂN 3)', winnerSF1B, winnerSF2B, knockoutData.finalB || {score1:0, score2:0, finished:false})}
             `;
         }
     }
@@ -926,7 +934,7 @@ function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData) {
                 <input type="number" class="score-input" value="${mData.score1}" onchange="updateKnockoutScore('${matchKey}', 1, this.value)" ${mData.finished ? 'disabled' : ''}>
                 <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 1, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
             </div>
-            <span style="font-size:22px; font-weight:bold;"> - </span>
+            <span style="font-size:20px; font-weight:bold;"> - </span>
             <div class="team-score-control">
                 <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
                 <input type="number" class="score-input" value="${mData.score2}" onchange="updateKnockoutScore('${matchKey}', 2, this.value)" ${mData.finished ? 'disabled' : ''}>
@@ -937,7 +945,7 @@ function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData) {
             <button class="score-btn finish-btn" onclick="toggleFinishKnockoutMatch('${matchKey}')">${mData.finished ? 'Mở Lại' : 'Chốt Trận'}</button>
             <button class="score-btn reset-btn" onclick="resetKnockoutMatch('${matchKey}')">Reset</button>
         </div>
-    ` : `<div style="font-size:28px; font-weight:bold; color:#e67e22; margin:10px 0;">${mData.score1} - ${mData.score2}</div>`;
+    ` : `<div style="font-size:26px; font-weight:bold; color:#e67e22; margin:8px 0;">${mData.score1} - ${mData.score2}</div>`;
 
     return `
         <div class="court-box">
