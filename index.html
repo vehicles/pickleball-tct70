@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Điều Hành Pickleball TCT70</title>
-    <!-- Thư viện xuất PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- Nhúng Firebase Realtime Database SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Cấu hình Firebase thực tế dự án pickleball-tct70
         const firebaseConfig = {
           apiKey: "AIzaSyBpEqXWixeZM0ecwr_yL13t9SGfseRtgEY",
           authDomain: "pickleball-tct70.firebaseapp.com",
@@ -33,30 +30,19 @@
         window.dbConfigRef = ref(db, 'pickleball_config');
         window.dbSet = set;
 
-        // 1. Lắng nghe dữ liệu Vòng bảng Real-time (Khán giả & Trọng tài)
         onValue(window.dbRef, (snapshot) => {
             const data = snapshot.val();
-            if (data) {
-                matchData = data;
-            } else {
-                matchData = {};
-            }
+            matchData = data || {};
             renderCourts();
             updateStandings();
         });
 
-        // 2. Lắng nghe dữ liệu Vòng trong Real-time (Khán giả & Trọng tài)
         onValue(window.dbKnockoutRef, (snapshot) => {
             const data = snapshot.val();
-            if (data) {
-                knockoutData = Object.assign(getEmptyKnockoutData(), data);
-            } else {
-                knockoutData = getEmptyKnockoutData();
-            }
+            knockoutData = Object.assign(getEmptyKnockoutData(), data || {});
             renderKnockoutMatches();
         });
 
-        // 3. Lắng nghe dữ liệu Đội đã chốt Real-time (Khán giả & Trọng tài)
         onValue(window.dbTeamsRef, (snapshot) => {
             const data = snapshot.val();
             if (data && data.teams && data.teams.length > 0) {
@@ -74,17 +60,11 @@
             updateLockStatusUI();
         });
 
-        // 4. Lắng nghe Cấu hình Điểm kết thúc Real-time (Cập nhật cho Khán giả & Trọng tài)
         onValue(window.dbConfigRef, (snapshot) => {
             const data = snapshot.val();
-            if (data && data.winningScore) {
-                winningScore = parseInt(data.winningScore) || 50;
-            } else {
-                winningScore = 50;
-            }
+            winningScore = (data && data.winningScore) ? parseInt(data.winningScore) : 50;
             const inputEl = document.getElementById('winningScoreInput');
             if (inputEl) inputEl.value = winningScore;
-            
             renderCourts();
             updateStandings();
         });
@@ -193,11 +173,11 @@
                 <img id="logoImage" src="" alt="Logo Kỷ niệm 70 năm Khoa Toán - Cơ - Tin học">
             </div>
             <div class="header-title">
-                <h1>GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</h1>
-                <div class="subtitle">ĐIỀU HÀNH PICKLEBALL TCT70</div>
+                <h1>ĐIỀU HÀNH PICKLEBALL TCT70</h1>
+                <div class="subtitle">GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</div>
             </div>
         </div>
-        <button id="authBtn" class="btn-auth" onclick="toggleAuthRole()">🔑 Đăng nhập</button>
+        <button id="authBtn" class="btn-auth" onclick="toggleAuthRole()">🔑 Khán giả</button>
     </div>
 
     <div id="mainTabSelector" class="main-tab-selector">
@@ -211,15 +191,15 @@
             <div class="grid-inputs">
                 <div>
                     <label><b>Số VĐV đăng ký:</b></label>
-                    <input type="number" id="targetPlayerCount" value="29" min="1" max="200" class="input-box" oninput="syncPlayersWithTarget()">
+                    <input type="number" id="targetPlayerCount" value="32" min="1" max="200" class="input-box" oninput="syncPlayersWithTarget()">
                 </div>
                 <div>
                     <label><b>VĐV / 1 Team:</b></label>
-                    <input type="number" id="teamSize" value="10" min="2" class="input-box" oninput="recalculateTeamsCount()">
+                    <input type="number" id="teamSize" value="4" min="2" class="input-box" oninput="recalculateTeamsCount()">
                 </div>
                 <div>
                     <label><b>Số Team tự động:</b></label>
-                    <input type="number" id="customTeamCount" value="3" class="input-box" onchange="generateSchedule()">
+                    <input type="number" id="customTeamCount" value="8" class="input-box" onchange="generateSchedule()">
                 </div>
                 <div>
                     <label><b>Điểm kết thúc:</b></label>
@@ -271,7 +251,7 @@
         </div>
 
         <div id="pdfExportArea">
-            <h2 style="margin-top: 25px;">Kết Quả Chia Đội <span id="lockBadge" style="font-size:14px; color:#27ae60;"></span></h2>
+            <h2 style="margin-top: 25px;">2. Kết Quả Chia Đội <span id="lockBadge" style="font-size:14px; color:#27ae60;"></span></h2>
             <div id="teamsResultGrid"></div>
         </div>
     </div>
@@ -280,7 +260,7 @@
         <div class="serie-title">🥇 SERIE A (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE A)</div>
         <div class="knockout-grid" id="serieAGrid"></div>
 
-        <div class="serie-title" style="background: #d35400; margin-top: 30px;">🥈 SERIE B (CHUNG KẾT SERIE B)</div>
+        <div class="serie-title" style="background: #d35400; margin-top: 30px;">🥈 SERIE B (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE B)</div>
         <div class="knockout-grid" id="serieBGrid"></div>
     </div>
 </div>
@@ -305,30 +285,19 @@ let matchData = {};
 
 function getEmptyKnockoutData() {
     return {
-        sf1: { score1: 0, score2: 0, finished: false },
-        sf2: { score1: 0, score2: 0, finished: false },
-        finalA: { score1: 0, score2: 0, finished: false },
+        sf1A: { score1: 0, score2: 0, finished: false },
+        sf2A: { score1: 0, score2: 0, finished: false },
         bronzeA: { score1: 0, score2: 0, finished: false },
+        finalA: { score1: 0, score2: 0, finished: false },
+        
+        sf1B: { score1: 0, score2: 0, finished: false },
+        sf2B: { score1: 0, score2: 0, finished: false },
+        bronzeB: { score1: 0, score2: 0, finished: false },
         finalB: { score1: 0, score2: 0, finished: false }
     };
 }
 
 let knockoutData = getEmptyKnockoutData();
-
-const fixedSchedule6Teams = {
-    1: {
-        subtitle: "Sân 1: Team 1 vs Team 2 (T3 nghỉ) | Sân 2: Team 4 vs Team 5 (T6 nghỉ)",
-        courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 4 }]
-    },
-    2: {
-        subtitle: "Sân 1: Team 1 vs Team 3 (T2 nghỉ) | Sân 2: Team 4 vs Team 6 (T5 nghỉ)",
-        courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 5 }]
-    },
-    3: {
-        subtitle: "Sân 1: Team 2 vs Team 3 (T1 nghỉ) | Sân 2: Team 5 vs Team 6 (T4 nghỉ)",
-        courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 1, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 5 }]
-    }
-};
 
 window.addEventListener('DOMContentLoaded', () => {
     const logoEl = document.getElementById('logoImage');
@@ -341,7 +310,6 @@ function updateWinningScore(val) {
     if (currentRole !== 'btc') return;
     const score = parseInt(val) || 50;
     winningScore = score;
-    
     if (window.dbSet && window.dbConfigRef) {
         window.dbSet(window.dbConfigRef, { winningScore: score });
     }
@@ -349,8 +317,8 @@ function updateWinningScore(val) {
 }
 
 function recalculateTeamsCount() {
-    const targetCount = parseInt(document.getElementById('targetPlayerCount').value) || currentPlayers.length || 29;
-    const teamSize = parseInt(document.getElementById('teamSize').value) || 10;
+    const targetCount = parseInt(document.getElementById('targetPlayerCount').value) || currentPlayers.length || 32;
+    const teamSize = parseInt(document.getElementById('teamSize').value) || 4;
     const calculatedTeams = Math.max(2, Math.ceil(targetCount / teamSize));
     
     document.getElementById('customTeamCount').value = calculatedTeams;
@@ -358,42 +326,77 @@ function recalculateTeamsCount() {
 }
 
 function generateSchedule() {
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 3;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 8;
     const mainTabSelector = document.getElementById('mainTabSelector');
 
     if (totalTeams === 6) {
         mainTabSelector.style.display = 'flex';
-        roundSchedule = [1, 2, 3];
-        if (!matchData[1] || !Array.isArray(matchData[1])) {
-            matchData = {
-                1: [{ score1: 0, score2: 0, finished: false }, { score1: 0, score2: 0, finished: false }],
-                2: [{ score1: 0, score2: 0, finished: false }, { score1: 0, score2: 0, finished: false }],
-                3: [{ score1: 0, score2: 0, finished: false }, { score1: 0, score2: 0, finished: false }]
-            };
-        }
+        roundSchedule = [
+            {
+                roundNum: 1,
+                subtitle: "Sân 1 (Bảng A): Team 1 vs Team 2 | Sân 2 (Bảng B): Team 4 vs Team 5",
+                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 4 }]
+            },
+            {
+                roundNum: 2,
+                subtitle: "Sân 1 (BẢNG A): Team 1 vs Team 3 | Sân 2 (BẢNG B): Team 4 vs Team 6",
+                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 5 }]
+            },
+            {
+                roundNum: 3,
+                subtitle: "Sân 1 (BẢNG A): Team 2 vs Team 3 | Sân 2 (BẢNG B): Team 5 vs Team 6",
+                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 1, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 5 }]
+            }
+        ];
+    } else if (totalTeams === 8) {
+        mainTabSelector.style.display = 'flex';
+        roundSchedule = [
+            {
+                roundNum: 1,
+                subtitle: "Sân 1 (Bảng A): Team 1 vs Team 2 | Sân 2 (Bảng B): Team 5 vs Team 6",
+                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 5 }]
+            },
+            {
+                roundNum: 2,
+                subtitle: "Sân 1 (BẢNG A): Team 3 vs Team 4 | Sân 2 (BẢNG B): Team 7 vs Team 8",
+                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 2, t2Idx: 3 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 6, t2Idx: 7 }]
+            },
+            {
+                roundNum: 3,
+                subtitle: "Sân 1 (BẢNG A): Team 1 vs Team 3 | Sân 2 (BẢNG B): Team 5 vs Team 7",
+                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 6 }]
+            },
+            {
+                roundNum: 4,
+                subtitle: "Sân 1 (BẢNG A): Team 2 vs Team 4 | Sân 2 (BẢNG B): Team 6 vs Team 8",
+                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 1, t2Idx: 3 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 5, t2Idx: 7 }]
+            },
+            {
+                roundNum: 5,
+                subtitle: "Sân 1 (BẢNG A): Team 1 vs Team 4 | Sân 2 (BẢNG B): Team 5 vs Team 8",
+                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 3 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 7 }]
+            },
+            {
+                roundNum: 6,
+                subtitle: "Sân 1 (BẢNG A): Team 2 vs Team 3 | Sân 2 (BẢNG B): Team 6 vs Team 7",
+                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 1, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 5, t2Idx: 6 }]
+            }
+        ];
     } else {
         mainTabSelector.style.display = 'none';
         switchMainTab('group');
         roundSchedule = [];
         let matchCount = 1;
-
-        let tempMatchData = {};
         for (let i = 0; i < totalTeams; i++) {
             for (let j = i + 1; j < totalTeams; j++) {
                 roundSchedule.push({
                     roundNum: matchCount,
-                    title: `TRẬN ${matchCount}`,
                     subtitle: `Team ${i + 1} vs Team ${j + 1}`,
-                    t1Idx: i,
-                    t2Idx: j
+                    courts: [{ title: `TRẬN ${matchCount}`, t1Idx: i, t2Idx: j }]
                 });
-                tempMatchData[matchCount] = matchData[matchCount] && !Array.isArray(matchData[matchCount]) 
-                    ? matchData[matchCount] 
-                    : { score1: 0, score2: 0, finished: false };
                 matchCount++;
             }
         }
-        matchData = tempMatchData;
     }
 
     currentRound = 1;
@@ -405,26 +408,13 @@ function generateSchedule() {
 function renderRoundButtons() {
     const container = document.getElementById('roundSelector');
     container.innerHTML = '';
-
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 3;
-
-    if (totalTeams === 6) {
-        [1, 2, 3].forEach(r => {
-            const btn = document.createElement('button');
-            btn.className = `btn-round ${r === currentRound ? 'active' : ''}`;
-            btn.innerText = `LƯỢT ${r}`;
-            btn.onclick = () => selectRound(r);
-            container.appendChild(btn);
-        });
-    } else {
-        roundSchedule.forEach(item => {
-            const btn = document.createElement('button');
-            btn.className = `btn-round ${item.roundNum === currentRound ? 'active' : ''}`;
-            btn.innerText = `TRẬN ${item.roundNum}`;
-            btn.onclick = () => selectRound(item.roundNum);
-            container.appendChild(btn);
-        });
-    }
+    roundSchedule.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = `btn-round ${item.roundNum === currentRound ? 'active' : ''}`;
+        btn.innerText = `LƯỢT ${item.roundNum}`;
+        btn.onclick = () => selectRound(item.roundNum);
+        container.appendChild(btn);
+    });
 }
 
 function selectRound(rNum) {
@@ -438,7 +428,7 @@ function toggleAuthRole() {
         currentRole = 'guest';
         alert("🔒 Đã chuyển về giao diện Khán giả.");
     } else {
-        const pin = prompt("Nhập mật khẩu:");
+        const pin = prompt("Nhập mã PIN (1234: Trọng tài | 1956: BTC):");
         if (pin === PIN_BTC) {
             currentRole = 'btc';
             alert("👑 Đã đăng nhập vai trò BAN TỔ CHỨC!");
@@ -466,28 +456,22 @@ function updateAccessControl() {
     }
 
     const btcElements = document.querySelectorAll('.btc-only');
-    btcElements.forEach(el => {
-        el.style.display = (currentRole === 'btc') ? '' : 'none';
-    });
+    btcElements.forEach(el => { el.style.display = (currentRole === 'btc') ? '' : 'none'; });
 
     const playerSection = document.getElementById('playerListSection');
-    if (playerSection) {
-        playerSection.style.display = (currentRole === 'referee') ? 'none' : 'block';
-    }
+    if (playerSection) { playerSection.style.display = (currentRole === 'referee') ? 'none' : 'block'; }
 
     renderCourts();
     renderKnockoutMatches();
 }
 
-// HÀM RESET DỮ LIỆU ĐỒNG BỘ NGHUYÊN TRẠNG LÊN FIREBASE VÀ TẢI LẠI TRÌNH DUYỆT KHÁN GIẢ/TRỌNG TÀI
 function resetAllData() {
     if (currentRole !== 'btc') {
         alert("❌ Chỉ Ban tổ chức mới có quyền thực hiện thao tác này!");
         return;
     }
 
-    const confirmReset = confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả chia đội và điểm số không?");
-    if (!confirmReset) return;
+    if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả chia đội và điểm số không?")) return;
 
     isTeamsLocked = false;
     generatedTeams = [];
@@ -498,7 +482,7 @@ function resetAllData() {
 
     if (window.dbSet) {
         if (window.dbTeamsRef) window.dbSet(window.dbTeamsRef, { teams: [], locked: false });
-        if (window.dbRef) window.dbSet(window.dbRef, matchData);
+        if (window.dbRef) window.dbSet(window.dbRef, {});
         if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData);
         if (window.dbConfigRef) window.dbSet(window.dbConfigRef, { winningScore: 50 });
     }
@@ -514,28 +498,20 @@ function toggleLockTeams() {
     }
 
     isTeamsLocked = !isTeamsLocked;
-    
     if (window.dbSet && window.dbTeamsRef) {
-        window.dbSet(window.dbTeamsRef, {
-            teams: generatedTeams,
-            locked: isTeamsLocked
-        });
+        window.dbSet(window.dbTeamsRef, { teams: generatedTeams, locked: isTeamsLocked });
     }
-
     alert(isTeamsLocked ? "✅ Đã CHỐT danh sách VĐV!" : "🔓 Đã MỞ LẠI danh sách VĐV!");
 }
 
 function updateLockStatusUI() {
     const lockBtn = document.getElementById('lockBtn');
     const lockBadge = document.getElementById('lockBadge');
-    
     if (lockBtn) {
         lockBtn.innerText = isTeamsLocked ? "🔓 MỞ CHỐT DANH SÁCH" : "🔒 CHỐT DANH SÁCH VĐV";
         lockBtn.style.backgroundColor = isTeamsLocked ? "#7f8c8d" : "#d35400";
     }
-    if (lockBadge) {
-        lockBadge.innerText = isTeamsLocked ? "(ĐÃ CHỐT)" : "(CHƯA CHỐT)";
-    }
+    if (lockBadge) { lockBadge.innerText = isTeamsLocked ? "(ĐÃ CHỐT)" : "(CHƯA CHỐT)"; }
 }
 
 function drawTeams() {
@@ -545,7 +521,7 @@ function drawTeams() {
         return;
     }
 
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 3;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 8;
     const shuffle = array => array.sort(() => Math.random() - 0.5);
 
     const femalesA = shuffle(currentPlayers.filter(p => p.gender === 'Nữ' && p.level === 'A'));
@@ -586,10 +562,7 @@ function drawTeams() {
     generatedTeams.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
     
     if (window.dbSet && window.dbTeamsRef) {
-        window.dbSet(window.dbTeamsRef, {
-            teams: generatedTeams,
-            locked: false
-        });
+        window.dbSet(window.dbTeamsRef, { teams: generatedTeams, locked: false });
     }
 
     generateSchedule();
@@ -600,89 +573,29 @@ function renderCourts() {
     if (!courtsDiv) return;
     courtsDiv.innerHTML = '';
 
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 3;
     const canEdit = (currentRole === 'btc' || currentRole === 'referee');
-
     const roundTitle = document.getElementById('roundTitle');
-    if (roundTitle) {
-        roundTitle.innerText = `🏓 ĐIỀU HÀNH SÂN ĐẤU (CHẠM ${winningScore} ĐIỂM THẮNG)`;
-    }
+    if (roundTitle) { roundTitle.innerText = `🏓 ĐIỀU HÀNH SÂN ĐẤU (CHẠM ${winningScore} ĐIỂM THẮNG)`; }
 
-    if (totalTeams === 6) {
-        const roundInfo = fixedSchedule6Teams[currentRound];
-        document.getElementById('roundSubtitle').innerText = roundInfo.subtitle;
+    const currentMatchInfo = roundSchedule.find(r => r.roundNum === currentRound);
+    if (!currentMatchInfo) return;
 
-        for (let c = 0; c < 2; c++) {
-            const mData = (matchData[currentRound] && matchData[currentRound][c]) ? matchData[currentRound][c] : { score1: 0, score2: 0, finished: false };
-            const match = roundInfo.courts[c];
-            const totalScore = mData.score1 + mData.score2;
-            const rotationIndex = Math.floor(totalScore / 5);
+    document.getElementById('roundSubtitle').innerText = currentMatchInfo.subtitle;
 
-            let playersHTML = '';
-            let winnerText = '';
+    currentMatchInfo.courts.forEach((match, cIdx) => {
+        const mData = (matchData[currentRound] && matchData[currentRound][cIdx]) 
+            ? matchData[currentRound][cIdx] 
+            : { score1: 0, score2: 0, finished: false };
 
-            if (generatedTeams.length > match.t2Idx) {
-                const team1 = generatedTeams[match.t1Idx];
-                const team2 = generatedTeams[match.t2Idx];
-
-                const p1_1 = team1.members[rotationIndex % team1.members.length]?.name || '';
-                const p1_2 = team1.members[(rotationIndex + 1) % team1.members.length]?.name || '';
-                const p2_1 = team2.members[rotationIndex % team2.members.length]?.name || '';
-                const p2_2 = team2.members[(rotationIndex + 1) % team2.members.length]?.name || '';
-
-                playersHTML = `
-                    <b>${team1.name}:</b> <u>${p1_1}</u> & <u>${p1_2}</u><br>
-                    <div style="text-align:center; margin:3px 0; font-size:11px; color:#888;">--- VS ---</div>
-                    <b>${team2.name}:</b> <u>${p2_1}</u> & <u>${p2_2}</u>
-                `;
-
-                if (mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore) {
-                    if (mData.score1 > mData.score2) winnerText = `<div class="winner-badge">🏆 ĐỘI THẮNG: ${team1.name} (${mData.score1} - ${mData.score2})</div>`;
-                    else if (mData.score2 > mData.score1) winnerText = `<div class="winner-badge">🏆 ĐỘI THẮNG: ${team2.name} (${mData.score2} - ${mData.score1})</div>`;
-                    else winnerText = `<div class="winner-badge" style="background:#e67e22;">🤝 TRẬN HOÀ (${mData.score1} - ${mData.score2})</div>`;
-                }
-            } else { playersHTML = '<i>Chờ bốc thăm chia Team...</i>'; }
-
-            let controlHTML = canEdit ? `
-                <div class="court-score-container">
-                    <div class="team-score-control">
-                        <button class="btn-step btn-minus" onclick="adjustScore6Team(${c}, 1, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
-                        <input type="number" class="score-input" value="${mData.score1}" onchange="updateMatchScore6Team(${c}, 1, this.value)" ${mData.finished ? 'disabled' : ''}>
-                        <button class="btn-step btn-plus" onclick="adjustScore6Team(${c}, 1, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
-                    </div>
-                    <span style="font-size:22px; font-weight:bold;"> - </span>
-                    <div class="team-score-control">
-                        <button class="btn-step btn-minus" onclick="adjustScore6Team(${c}, 2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
-                        <input type="number" class="score-input" value="${mData.score2}" onchange="updateMatchScore6Team(${c}, 2, this.value)" ${mData.finished ? 'disabled' : ''}>
-                        <button class="btn-step btn-plus" onclick="adjustScore6Team(${c}, 2, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
-                    </div>
-                </div>
-                <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
-                    <button class="score-btn finish-btn" onclick="toggleFinishMatch6Team(${c})">${mData.finished ? 'Mở Lại' : 'Chốt Trận'}</button>
-                    <button class="score-btn reset-btn" onclick="resetMatch6Team(${c})">Reset</button>
-                </div>
-            ` : `<div style="font-size:28px; font-weight:bold; color:#e67e22; margin:10px 0;">${mData.score1} - ${mData.score2}</div>`;
-
-            const courtCard = document.createElement('div');
-            courtCard.className = 'court-box';
-            courtCard.innerHTML = `<div class="court-title">${match.title}</div>${controlHTML}<div class="court-players">${(mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore) ? winnerText : playersHTML}</div>`;
-            courtsDiv.appendChild(courtCard);
-        }
-    } else {
-        const currentMatchInfo = roundSchedule.find(r => r.roundNum === currentRound);
-        if (!currentMatchInfo) return;
-
-        document.getElementById('roundSubtitle').innerText = currentMatchInfo.subtitle;
-        const mData = matchData[currentRound] || { score1: 0, score2: 0, finished: false };
         const totalScore = mData.score1 + mData.score2;
         const rotationIndex = Math.floor(totalScore / 5);
 
         let playersHTML = '';
         let winnerText = '';
 
-        if (generatedTeams.length > currentMatchInfo.t2Idx) {
-            const team1 = generatedTeams[currentMatchInfo.t1Idx];
-            const team2 = generatedTeams[currentMatchInfo.t2Idx];
+        if (generatedTeams.length > match.t2Idx) {
+            const team1 = generatedTeams[match.t1Idx];
+            const team2 = generatedTeams[match.t2Idx];
 
             const p1_1 = team1.members[rotationIndex % team1.members.length]?.name || '';
             const p1_2 = team1.members[(rotationIndex + 1) % team1.members.length]?.name || '';
@@ -705,91 +618,68 @@ function renderCourts() {
         let controlHTML = canEdit ? `
             <div class="court-score-container">
                 <div class="team-score-control">
-                    <button class="btn-step btn-minus" onclick="adjustScore(1, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
-                    <input type="number" class="score-input" value="${mData.score1}" onchange="updateMatchScore(1, this.value)" ${mData.finished ? 'disabled' : ''}>
-                    <button class="btn-step btn-plus" onclick="adjustScore(1, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
+                    <button class="btn-step btn-minus" onclick="adjustScore(${cIdx}, 1, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
+                    <input type="number" class="score-input" value="${mData.score1}" onchange="updateMatchScore(${cIdx}, 1, this.value)" ${mData.finished ? 'disabled' : ''}>
+                    <button class="btn-step btn-plus" onclick="adjustScore(${cIdx}, 1, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
                 </div>
                 <span style="font-size:22px; font-weight:bold;"> - </span>
                 <div class="team-score-control">
-                    <button class="btn-step btn-minus" onclick="adjustScore(2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
-                    <input type="number" class="score-input" value="${mData.score2}" onchange="updateMatchScore(2, this.value)" ${mData.finished ? 'disabled' : ''}>
-                    <button class="btn-step btn-plus" onclick="adjustScore(2, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
+                    <button class="btn-step btn-minus" onclick="adjustScore(${cIdx}, 2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
+                    <input type="number" class="score-input" value="${mData.score2}" onchange="updateMatchScore(${cIdx}, 2, this.value)" ${mData.finished ? 'disabled' : ''}>
+                    <button class="btn-step btn-plus" onclick="adjustScore(${cIdx}, 2, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
                 </div>
             </div>
             <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
-                <button class="score-btn finish-btn" onclick="toggleFinishMatch()">${mData.finished ? 'Mở Lại' : 'Chốt Trận'}</button>
-                <button class="score-btn reset-btn" onclick="resetMatch()">Reset</button>
+                <button class="score-btn finish-btn" onclick="toggleFinishMatch(${cIdx})">${mData.finished ? 'Mở Lại' : 'Chốt Trận'}</button>
+                <button class="score-btn reset-btn" onclick="resetMatch(${cIdx})">Reset</button>
             </div>
         ` : `<div style="font-size:28px; font-weight:bold; color:#e67e22; margin:10px 0;">${mData.score1} - ${mData.score2}</div>`;
 
         const courtCard = document.createElement('div');
         courtCard.className = 'court-box';
-        courtCard.innerHTML = `<div class="court-title">${currentMatchInfo.title}</div>${controlHTML}<div class="court-players">${(mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore) ? winnerText : playersHTML}</div>`;
+        courtCard.innerHTML = `<div class="court-title">${match.title}</div>${controlHTML}<div class="court-players">${(mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore) ? winnerText : playersHTML}</div>`;
         courtsDiv.appendChild(courtCard);
-    }
+    });
 }
 
-function adjustScore6Team(courtIdx, teamNum, delta) {
+function adjustScore(cIdx, teamNum, delta) {
     if (currentRole === 'guest') return;
-    const mData = matchData[currentRound][courtIdx];
+    if (!matchData[currentRound]) matchData[currentRound] = {};
+    if (!matchData[currentRound][cIdx]) matchData[currentRound][cIdx] = { score1: 0, score2: 0, finished: false };
+
+    const mData = matchData[currentRound][cIdx];
     if (teamNum === 1) mData.score1 = Math.max(0, (mData.score1 || 0) + delta);
     if (teamNum === 2) mData.score2 = Math.max(0, (mData.score2 || 0) + delta);
     if (mData.score1 >= winningScore || mData.score2 >= winningScore) mData.finished = true;
+
     renderCourts(); updateStandings(); syncFirebaseData();
 }
 
-function updateMatchScore6Team(courtIdx, teamNum, val) {
+function updateMatchScore(cIdx, teamNum, val) {
     if (currentRole === 'guest') return;
+    if (!matchData[currentRound]) matchData[currentRound] = {};
+    if (!matchData[currentRound][cIdx]) matchData[currentRound][cIdx] = { score1: 0, score2: 0, finished: false };
+
     const scoreVal = parseInt(val) || 0;
-    if (teamNum === 1) matchData[currentRound][courtIdx].score1 = scoreVal;
-    if (teamNum === 2) matchData[currentRound][courtIdx].score2 = scoreVal;
-    if (matchData[currentRound][courtIdx].score1 >= winningScore || matchData[currentRound][courtIdx].score2 >= winningScore) {
-        matchData[currentRound][courtIdx].finished = true;
-    }
-    renderCourts(); updateStandings(); syncFirebaseData();
-}
-
-function toggleFinishMatch6Team(courtIdx) {
-    if (currentRole === 'guest') return;
-    matchData[currentRound][courtIdx].finished = !matchData[currentRound][courtIdx].finished;
-    renderCourts(); updateStandings(); syncFirebaseData();
-}
-
-function resetMatch6Team(courtIdx) {
-    if (currentRole === 'guest') return;
-    matchData[currentRound][courtIdx] = { score1: 0, score2: 0, finished: false };
-    renderCourts(); updateStandings(); syncFirebaseData();
-}
-
-function adjustScore(teamNum, delta) {
-    if (currentRole === 'guest') return;
-    const mData = matchData[currentRound];
-    if (teamNum === 1) mData.score1 = Math.max(0, (mData.score1 || 0) + delta);
-    if (teamNum === 2) mData.score2 = Math.max(0, (mData.score2 || 0) + delta);
-    if (mData.score1 >= winningScore || mData.score2 >= winningScore) mData.finished = true;
-    renderCourts(); updateStandings(); syncFirebaseData();
-}
-
-function updateMatchScore(teamNum, val) {
-    if (currentRole === 'guest') return;
-    const scoreVal = parseInt(val) || 0;
+    const mData = matchData[currentRound][cIdx];
     if (teamNum === 1) mData.score1 = scoreVal;
     if (teamNum === 2) mData.score2 = scoreVal;
-    if (matchData[currentRound].score1 >= winningScore || matchData[currentRound].score2 >= winningScore) {
-        matchData[currentRound].finished = true;
-    }
+    if (mData.score1 >= winningScore || mData.score2 >= winningScore) mData.finished = true;
+
     renderCourts(); updateStandings(); syncFirebaseData();
 }
 
-function toggleFinishMatch() {
+function toggleFinishMatch(cIdx) {
     if (currentRole === 'guest') return;
-    matchData[currentRound].finished = !matchData[currentRound].finished;
+    if (!matchData[currentRound] || !matchData[currentRound][cIdx]) return;
+    matchData[currentRound][cIdx].finished = !matchData[currentRound][cIdx].finished;
     renderCourts(); updateStandings(); syncFirebaseData();
 }
 
-function resetMatch() {
+function resetMatch(cIdx) {
     if (currentRole === 'guest') return;
-    matchData[currentRound] = { score1: 0, score2: 0, finished: false };
+    if (!matchData[currentRound]) matchData[currentRound] = {};
+    matchData[currentRound][cIdx] = { score1: 0, score2: 0, finished: false };
     renderCourts(); updateStandings(); syncFirebaseData();
 }
 
@@ -800,7 +690,7 @@ function syncFirebaseData() {
 }
 
 function updateStandings() {
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 3;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 8;
     const container = document.getElementById('standingsContainer');
     if (!container) return;
 
@@ -809,18 +699,19 @@ function updateStandings() {
         return;
     }
 
-    if (totalTeams === 6) {
+    if (totalTeams === 6 || totalTeams === 8) {
+        const half = totalTeams / 2;
         container.innerHTML = `
             <div class="standings-container">
                 <div class="standing-box">
-                    <div class="standing-title">BẢNG XẾP HẠNG - BẢNG A</div>
+                    <div class="standing-title">BẢNG XẾP HẠNG - BẢNG A (Team 1 đến Team ${half})</div>
                     <table>
                         <thead><tr><th>Hạng</th><th>Đội</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Hiệu Số</th></tr></thead>
                         <tbody id="standingTableA"></tbody>
                     </table>
                 </div>
                 <div class="standing-box">
-                    <div class="standing-title" style="color:#d35400;">BẢNG XẾP HẠNG - BẢNG B</div>
+                    <div class="standing-title" style="color:#d35400;">BẢNG XẾP HẠNG - BẢNG B (Team ${half + 1} đến Team ${totalTeams})</div>
                     <table>
                         <thead><tr><th>Hạng</th><th>Đội</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Hiệu Số</th></tr></thead>
                         <tbody id="standingTableB"></tbody>
@@ -831,13 +722,12 @@ function updateStandings() {
 
         let stats = generatedTeams.map(t => ({ name: t.name, won: 0, lost: 0, ptsFor: 0, ptsAgainst: 0, diff: 0 }));
 
-        for (let r = 1; r <= 3; r++) {
-            const roundInfo = fixedSchedule6Teams[r];
-            [0, 1].forEach(cIdx => {
-                const mData = (matchData[r] && matchData[r][cIdx]) ? matchData[r][cIdx] : null;
+        roundSchedule.forEach(r => {
+            r.courts.forEach((cMatch, cIdx) => {
+                const mData = (matchData[r.roundNum] && matchData[r.roundNum][cIdx]) ? matchData[r.roundNum][cIdx] : null;
                 if (mData && (mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore)) {
-                    const t1 = roundInfo.courts[cIdx].t1Idx;
-                    const t2 = roundInfo.courts[cIdx].t2Idx;
+                    const t1 = cMatch.t1Idx;
+                    const t2 = cMatch.t2Idx;
 
                     stats[t1].ptsFor += mData.score1; stats[t1].ptsAgainst += mData.score2;
                     stats[t2].ptsFor += mData.score2; stats[t2].ptsAgainst += mData.score1;
@@ -846,11 +736,11 @@ function updateStandings() {
                     else if (mData.score2 > mData.score1) { stats[t2].won++; stats[t1].lost++; }
                 }
             });
-        }
+        });
 
         stats.forEach(s => s.diff = s.ptsFor - s.ptsAgainst);
-        let groupAStats = stats.slice(0, 3).sort((a, b) => b.won - a.won || b.diff - a.diff || b.ptsFor - a.ptsFor);
-        let groupBStats = stats.slice(3, 6).sort((a, b) => b.won - a.won || b.diff - a.diff || b.ptsFor - a.ptsFor);
+        let groupAStats = stats.slice(0, half).sort((a, b) => b.won - a.won || b.diff - a.diff || b.ptsFor - a.ptsFor);
+        let groupBStats = stats.slice(half, totalTeams).sort((a, b) => b.won - a.won || b.diff - a.diff || b.ptsFor - a.ptsFor);
 
         renderStandingTable('standingTableA', groupAStats);
         renderStandingTable('standingTableB', groupBStats);
@@ -868,19 +758,21 @@ function updateStandings() {
 
         let stats = generatedTeams.map(t => ({ name: t.name, played: 0, won: 0, lost: 0, ptsFor: 0, ptsAgainst: 0, diff: 0 }));
 
-        roundSchedule.forEach(m => {
-            const mData = matchData[m.roundNum];
-            if (mData && (mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore)) {
-                const t1 = m.t1Idx;
-                const t2 = m.t2Idx;
+        roundSchedule.forEach(r => {
+            r.courts.forEach((cMatch, cIdx) => {
+                const mData = (matchData[r.roundNum] && matchData[r.roundNum][cIdx]) ? matchData[r.roundNum][cIdx] : null;
+                if (mData && (mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore)) {
+                    const t1 = cMatch.t1Idx;
+                    const t2 = cMatch.t2Idx;
 
-                stats[t1].played++; stats[t2].played++;
-                stats[t1].ptsFor += mData.score1; stats[t1].ptsAgainst += mData.score2;
-                stats[t2].ptsFor += mData.score2; stats[t2].ptsAgainst += mData.score1;
+                    stats[t1].played++; stats[t2].played++;
+                    stats[t1].ptsFor += mData.score1; stats[t1].ptsAgainst += mData.score2;
+                    stats[t2].ptsFor += mData.score2; stats[t2].ptsAgainst += mData.score1;
 
-                if (mData.score1 > mData.score2) { stats[t1].won++; stats[t2].lost++; }
-                else if (mData.score2 > mData.score1) { stats[t2].won++; stats[t1].lost++; }
-            }
+                    if (mData.score1 > mData.score2) { stats[t1].won++; stats[t2].lost++; }
+                    else if (mData.score2 > mData.score1) { stats[t2].won++; stats[t1].lost++; }
+                }
+            });
         });
 
         stats.forEach(s => s.diff = s.ptsFor - s.ptsAgainst);
@@ -945,51 +837,72 @@ function renderKnockoutMatches() {
     const standings = updateStandings();
     if (!standings) return;
 
-    const gA = standings.groupA || [{name: 'Nhất A'}, {name: 'Nhì A'}, {name: 'Ba A'}];
-    const gB = standings.groupB || [{name: 'Nhất B'}, {name: 'Nhì B'}, {name: 'Ba B'}];
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 8;
+    const gA = standings.groupA || [];
+    const gB = standings.groupB || [];
 
+    // SERIE A (TOP 4)
     const teamA1 = gA[0]?.name || 'Nhất A';
     const teamA2 = gA[1]?.name || 'Nhì A';
     const teamB1 = gB[0]?.name || 'Nhất B';
     const teamB2 = gB[1]?.name || 'Nhì B';
 
-    const teamA3 = gA[2]?.name || 'Ba A';
-    const teamB3 = gB[2]?.name || 'Ba B';
+    let winnerSF1A = 'Thắng BK1 A', loserSF1A = 'Thua BK1 A';
+    let winnerSF2A = 'Thắng BK2 A', loserSF2A = 'Thua BK2 A';
 
-    let winnerSF1 = 'Thắng BK 1', loserSF1 = 'Thua BK 1';
-    let winnerSF2 = 'Thắng BK 2', loserSF2 = 'Thua BK 2';
-
-    if (knockoutData.sf1 && knockoutData.sf1.finished) {
-        if (knockoutData.sf1.score1 > knockoutData.sf1.score2) {
-            winnerSF1 = teamA1; loserSF1 = teamB2;
-        } else {
-            winnerSF1 = teamB2; loserSF1 = teamA1;
-        }
+    if (knockoutData.sf1A && knockoutData.sf1A.finished) {
+        if (knockoutData.sf1A.score1 > knockoutData.sf1A.score2) { winnerSF1A = teamA1; loserSF1A = teamB2; }
+        else { winnerSF1A = teamB2; loserSF1A = teamA1; }
     }
-
-    if (knockoutData.sf2 && knockoutData.sf2.finished) {
-        if (knockoutData.sf2.score1 > knockoutData.sf2.score2) {
-            winnerSF2 = teamB1; loserSF2 = teamA2;
-        } else {
-            winnerSF2 = teamA2; loserSF2 = teamB1;
-        }
+    if (knockoutData.sf2A && knockoutData.sf2A.finished) {
+        if (knockoutData.sf2A.score1 > knockoutData.sf2A.score2) { winnerSF2A = teamB1; loserSF2A = teamA2; }
+        else { winnerSF2A = teamA2; loserSF2A = teamB1; }
     }
 
     const serieAGrid = document.getElementById('serieAGrid');
     if (serieAGrid) {
         serieAGrid.innerHTML = `
-            ${createKnockoutBoxHTML('sf1', 'BÁN KẾT 1 (SERIE A)', teamA1, teamB2, knockoutData.sf1 || {score1:0, score2:0, finished:false})}
-            ${createKnockoutBoxHTML('sf2', 'BÁN KẾT 2 (SERIE A)', teamB1, teamA2, knockoutData.sf2 || {score1:0, score2:0, finished:false})}
-            ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA (SERIE A)', loserSF1, loserSF2, knockoutData.bronzeA || {score1:0, score2:0, finished:false})}
-            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (TRANH VÔ ĐỊCH)', winnerSF1, winnerSF2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('sf1A', 'BÁN KẾT 1 (SERIE A)', teamA1, teamB2, knockoutData.sf1A || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('sf2A', 'BÁN KẾT 2 (SERIE A)', teamB1, teamA2, knockoutData.sf2A || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA (SERIE A)', loserSF1A, loserSF2A, knockoutData.bronzeA || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (TRANH VÔ ĐỊCH)', winnerSF1A, winnerSF2A, knockoutData.finalA || {score1:0, score2:0, finished:false})}
         `;
     }
 
+    // SERIE B
     const serieBGrid = document.getElementById('serieBGrid');
     if (serieBGrid) {
-        serieBGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B', teamA3, teamB3, knockoutData.finalB || {score1:0, score2:0, finished:false})}
-        `;
+        if (totalTeams === 6) {
+            const teamA3 = gA[2]?.name || 'Ba A';
+            const teamB3 = gB[2]?.name || 'Ba B';
+            serieBGrid.innerHTML = `
+                ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B', teamA3, teamB3, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+            `;
+        } else if (totalTeams === 8) {
+            const teamA3 = gA[2]?.name || 'Ba A';
+            const teamA4 = gA[3]?.name || 'Tư A';
+            const teamB3 = gB[2]?.name || 'Ba B';
+            const teamB4 = gB[3]?.name || 'Tư B';
+
+            let winnerSF1B = 'Thắng BK1 B', loserSF1B = 'Thua BK1 B';
+            let winnerSF2B = 'Thắng BK2 B', loserSF2B = 'Thua BK2 B';
+
+            if (knockoutData.sf1B && knockoutData.sf1B.finished) {
+                if (knockoutData.sf1B.score1 > knockoutData.sf1B.score2) { winnerSF1B = teamA3; loserSF1B = teamB4; }
+                else { winnerSF1B = teamB4; loserSF1B = teamA3; }
+            }
+            if (knockoutData.sf2B && knockoutData.sf2B.finished) {
+                if (knockoutData.sf2B.score1 > knockoutData.sf2B.score2) { winnerSF2B = teamB3; loserSF2B = teamA4; }
+                else { winnerSF2B = teamA4; loserSF2B = teamB3; }
+            }
+
+            serieBGrid.innerHTML = `
+                ${createKnockoutBoxHTML('sf1B', 'BÁN KẾT 1 (SERIE B)', teamA3, teamB4, knockoutData.sf1B || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('sf2B', 'BÁN KẾT 2 (SERIE B)', teamB3, teamA4, knockoutData.sf2B || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('bronzeB', 'TRANH HẠNG BA (SERIE B)', loserSF1B, loserSF2B, knockoutData.bronzeB || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B', winnerSF1B, winnerSF2B, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+            `;
+        }
     }
 }
 
@@ -997,40 +910,34 @@ function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData) {
     let winnerText = '';
     if (mData.finished) {
         if (mData.score1 > mData.score2) {
-            winnerText = `<div class="winner-badge">🏆 THẮNG / HẠNG BA: ${team1Name} (${mData.score1} - ${mData.score2})</div>`;
+            winnerText = `<div class="winner-badge">🏆 THẮNG: ${team1Name} (${mData.score1} - ${mData.score2})</div>`;
         } else if (mData.score2 > mData.score1) {
-            winnerText = `<div class="winner-badge">🏆 THẮNG / HẠNG BA: ${team2Name} (${mData.score2} - ${mData.score1})</div>`;
+            winnerText = `<div class="winner-badge">🏆 THẮNG: ${team2Name} (${mData.score2} - ${mData.score1})</div>`;
         } else {
             winnerText = `<div class="winner-badge" style="background:#e67e22;">🤝 TRẬN HOÀ (${mData.score1} - ${mData.score2})</div>`;
         }
     }
 
     const canEditScore = (currentRole === 'btc' || currentRole === 'referee');
-    let controlHTML = '';
-
-    if (canEditScore) {
-        controlHTML = `
-            <div class="court-score-container">
-                <div class="team-score-control">
-                    <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 1, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
-                    <input type="number" class="score-input" value="${mData.score1}" onchange="updateKnockoutScore('${matchKey}', 1, this.value)" ${mData.finished ? 'disabled' : ''}>
-                    <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 1, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
-                </div>
-                <span style="font-size:22px; font-weight:bold;"> - </span>
-                <div class="team-score-control">
-                    <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
-                    <input type="number" class="score-input" value="${mData.score2}" onchange="updateKnockoutScore('${matchKey}', 2, this.value)" ${mData.finished ? 'disabled' : ''}>
-                    <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 2, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
-                </div>
+    let controlHTML = canEditScore ? `
+        <div class="court-score-container">
+            <div class="team-score-control">
+                <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 1, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
+                <input type="number" class="score-input" value="${mData.score1}" onchange="updateKnockoutScore('${matchKey}', 1, this.value)" ${mData.finished ? 'disabled' : ''}>
+                <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 1, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
             </div>
-            <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
-                <button class="score-btn finish-btn" onclick="toggleFinishKnockoutMatch('${matchKey}')">${mData.finished ? 'Mở Lại' : 'Chốt Trận'}</button>
-                <button class="score-btn reset-btn" onclick="resetKnockoutMatch('${matchKey}')">Reset</button>
+            <span style="font-size:22px; font-weight:bold;"> - </span>
+            <div class="team-score-control">
+                <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
+                <input type="number" class="score-input" value="${mData.score2}" onchange="updateKnockoutScore('${matchKey}', 2, this.value)" ${mData.finished ? 'disabled' : ''}>
+                <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 2, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
             </div>
-        `;
-    } else {
-        controlHTML = `<div style="font-size:28px; font-weight:bold; color:#e67e22; margin:10px 0;">${mData.score1} - ${mData.score2}</div>`;
-    }
+        </div>
+        <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
+            <button class="score-btn finish-btn" onclick="toggleFinishKnockoutMatch('${matchKey}')">${mData.finished ? 'Mở Lại' : 'Chốt Trận'}</button>
+            <button class="score-btn reset-btn" onclick="resetKnockoutMatch('${matchKey}')">Reset</button>
+        </div>
+    ` : `<div style="font-size:28px; font-weight:bold; color:#e67e22; margin:10px 0;">${mData.score1} - ${mData.score2}</div>`;
 
     return `
         <div class="court-box">
@@ -1115,7 +1022,10 @@ function loadBackupData() {
         { name: "Ngo Vi Truong", gender: "Nam", level: "A" },
         { name: "Hoàng Minh Vỹ", gender: "Nam", level: "A" },
         { name: "Nguyễn Thị Hồng Khánh", gender: "Nữ", level: "B" },
-        { name: "Lê Lệ Hằng", gender: "Nữ", level: "B" }
+        { name: "Lê Lệ Hằng", gender: "Nữ", level: "B" },
+        { name: "VĐV Bổ Sung 30", gender: "Nam", level: "A" },
+        { name: "VĐV Bổ Sung 31", gender: "Nam", level: "B" },
+        { name: "VĐV Bổ Sung 32", gender: "Nữ", level: "A" }
     ];
     syncPlayersWithTarget();
 }
@@ -1124,10 +1034,7 @@ function syncPlayersWithTarget() {
     const targetInput = document.getElementById('targetPlayerCount');
     const targetCount = parseInt(targetInput.value) || 0;
 
-    if (currentPlayers.length === 0) {
-        loadBackupData();
-        return;
-    }
+    if (currentPlayers.length === 0) { loadBackupData(); return; }
 
     while (currentPlayers.length < targetCount) {
         const nextIndex = currentPlayers.length + 1;
@@ -1201,18 +1108,19 @@ function renderResultsByGroups(teams) {
 
     const totalTeams = teams.length;
 
-    if (totalTeams === 6) {
+    if (totalTeams === 6 || totalTeams === 8) {
+        const half = totalTeams / 2;
         grid.innerHTML = `
             <div class="group-container" style="margin-bottom: 25px;">
                 <div class="group-header" style="background:#2980b9; color:white; padding:12px; border-radius:8px; font-weight:bold; font-size:16px; text-align:center; margin-bottom:15px;">
-                    BẢNG A (Team 1, Team 2, Team 3)
+                    BẢNG A (Team 1 đến Team ${half})
                 </div>
                 <div id="groupAResult" class="teams-grid"></div>
             </div>
 
             <div class="group-container">
                 <div class="group-header" style="background:#e67e22; color:white; padding:12px; border-radius:8px; font-weight:bold; font-size:16px; text-align:center; margin-bottom:15px;">
-                    BẢNG B (Team 4, Team 5, Team 6)
+                    BẢNG B (Team ${half + 1} đến Team ${totalTeams})
                 </div>
                 <div id="groupBResult" class="teams-grid"></div>
             </div>
@@ -1223,18 +1131,13 @@ function renderResultsByGroups(teams) {
 
         teams.forEach((team, index) => {
             const card = createTeamCardElement(team);
-            if (index < 3) {
-                groupADiv.appendChild(card);
-            } else {
-                groupBDiv.appendChild(card);
-            }
+            if (index < half) { groupADiv.appendChild(card); }
+            else { groupBDiv.appendChild(card); }
         });
     } else {
         const singleGrid = document.createElement('div');
         singleGrid.className = 'teams-grid';
-        teams.forEach(team => {
-            singleGrid.appendChild(createTeamCardElement(team));
-        });
+        teams.forEach(team => { singleGrid.appendChild(createTeamCardElement(team)); });
         grid.appendChild(singleGrid);
     }
 }
