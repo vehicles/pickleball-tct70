@@ -1124,18 +1124,34 @@ function renderInputTable(players) {
     });
 }
 
+// ==========================================
+// HÀM RENDER KẾT QUẢ CHIA ĐỘI (ĐÃ SỬA LỖI LAYOUT GRID)
+// ==========================================
 function renderResultsByGroups(teams) {
     const grid = document.getElementById('teamsResultGrid');
+    if (!grid) return;
     grid.innerHTML = '';
 
     const totalTeams = teams.length;
 
     if (totalTeams === 6) {
+        // TRƯỜNG HỢP 6 TEAM: TÁCH RIÊNG 2 KHỐI BẢNG A VÀ BẢNG B
         grid.innerHTML = `
-            <div class="group-header" style="width:100%;">BẢNG A (Team 1, Team 2, Team 3)</div>
-            <div id="groupAResult" class="teams-grid" style="width:100%;"></div>
-            <div class="group-header" style="background:#e67e22; margin-top:20px; width:100%;">BẢNG B (Team 4, Team 5, Team 6)</div>
-            <div id="groupBResult" class="teams-grid" style="width:100%;"></div>
+            <!-- KHỐI BẢNG A -->
+            <div class="group-container" style="margin-bottom: 25px;">
+                <div class="group-header" style="background:#2980b9; color:white; padding:12px; border-radius:8px; font-weight:bold; font-size:16px; text-align:center; margin-bottom:15px;">
+                    BẢNG A (Team 1, Team 2, Team 3)
+                </div>
+                <div id="groupAResult" class="teams-grid"></div>
+            </div>
+
+            <!-- KHỐI BẢNG B -->
+            <div class="group-container">
+                <div class="group-header" style="background:#e67e22; color:white; padding:12px; border-radius:8px; font-weight:bold; font-size:16px; text-align:center; margin-bottom:15px;">
+                    BẢNG B (Team 4, Team 5, Team 6)
+                </div>
+                <div id="groupBResult" class="teams-grid"></div>
+            </div>
         `;
 
         const groupADiv = document.getElementById('groupAResult');
@@ -1143,14 +1159,20 @@ function renderResultsByGroups(teams) {
 
         teams.forEach((team, index) => {
             const card = createTeamCardElement(team);
-            if (index < 3) groupADiv.appendChild(card);
-            else groupBDiv.appendChild(card);
+            if (index < 3) {
+                groupADiv.appendChild(card);
+            } else {
+                groupBDiv.appendChild(card);
+            }
         });
     } else {
-        grid.className = 'teams-grid';
+        // TRƯỜNG HỢP KHÁC 6 TEAM (VÍ DỤ 3 TEAM ĐẤU VÒNG TRÒN)
+        const singleGrid = document.createElement('div');
+        singleGrid.className = 'teams-grid';
         teams.forEach(team => {
-            grid.appendChild(createTeamCardElement(team));
+            singleGrid.appendChild(createTeamCardElement(team));
         });
+        grid.appendChild(singleGrid);
     }
 }
 
