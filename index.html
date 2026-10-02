@@ -30,9 +30,10 @@
         window.dbRef = ref(db, 'pickleball_matches');
         window.dbKnockoutRef = ref(db, 'pickleball_knockout');
         window.dbTeamsRef = ref(db, 'pickleball_teams');
+        window.dbConfigRef = ref(db, 'pickleball_config'); // Đường dẫn lưu cấu hình điểm thắng
         window.dbSet = set;
 
-        // LẮNG NGHE REAL-TIME TỶ SỐ VÒNG BẢNG (DÀNH CHO CẢ BTC & KHÁN GIẢ)
+        // Lắng nghe dữ liệu Vòng bảng Real-time
         onValue(window.dbRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -42,7 +43,7 @@
             }
         });
 
-        // LẮNG NGHE REAL-TIME VÒNG TRONG (DÀNH CHO CẢ BTC & KHÁN GIẢ)
+        // Lắng nghe dữ liệu Vòng trong Real-time
         onValue(window.dbKnockoutRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -53,7 +54,7 @@
             renderKnockoutMatches();
         });
 
-        // LẮNG NGHE REAL-TIME DANH SÁCH TEAM & TRẠNG THÁI CHỐT (DÀNH CHO CẢ BTC & KHÁN GIẢ)
+        // Lắng nghe dữ liệu Đội đã chốt Real-time
         onValue(window.dbTeamsRef, (snapshot) => {
             const data = snapshot.val();
             if (data && data.teams && data.teams.length > 0) {
@@ -72,6 +73,17 @@
                 renderCourts();
                 updateStandings();
                 updateLockStatusUI();
+            }
+        });
+
+        // Lắng nghe Cấu hình Điểm kết thúc Real-time
+        onValue(window.dbConfigRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.winningScore) {
+                winningScore = parseInt(data.winningScore) || 50;
+                const inputEl = document.getElementById('winningScoreInput');
+                if (inputEl) inputEl.value = winningScore;
+                renderCourts();
             }
         });
     </script>
@@ -100,7 +112,7 @@
         .btn-tab.active { background: #2980b9; color: white; }
 
         .control-panel { background: #eef7fc; border: 1px solid #bce1f7; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 8px; }
+        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 8px; }
         .input-box { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-weight: bold; font-size: 15px; }
 
         .button-group { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
@@ -179,8 +191,8 @@
                 <img id="logoImage" src="" alt="Logo Kỷ niệm 70 năm Khoa Toán - Cơ - Tin học">
             </div>
             <div class="header-title">
-                <h1>ĐIỀU HÀNH PICKLEBALL TCT70</h1>
-                <div class="subtitle">GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</div>
+                <h1>GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</h1>
+                <div class="subtitle">ĐIỀU HÀNH PICKLEBALL TCT70</div>
             </div>
         </div>
         <button id="authBtn" class="btn-auth" onclick="toggleAuthRole()">🔑 Khán giả</button>
@@ -206,6 +218,11 @@
                 <div>
                     <label><b>Số Team tự động:</b></label>
                     <input type="number" id="customTeamCount" value="3" class="input-box" onchange="generateSchedule()">
+                </div>
+                <!-- BỔ SUNG Ô NHẬP ĐIỂM KẾT THÚC -->
+                <div>
+                    <label><b>Điểm kết thúc:</b></label>
+                    <input type="number" id="winningScoreInput" value="50" min="10" max="100" class="input-box" onchange="updateWinningScore(this.value)">
                 </div>
             </div>
         </div>
@@ -253,7 +270,7 @@
         </div>
 
         <div id="pdfExportArea">
-            <h2 style="margin-top: 25px;">Kết Quả Chia Đội <span id="lockBadge" style="font-size:14px; color:#27ae60;"></span></h2>
+            <h2 style="margin-top: 25px;">2. Kết Quả Chia Đội <span id="lockBadge" style="font-size:14px; color:#27ae60;"></span></h2>
             <div id="teamsResultGrid"></div>
         </div>
     </div>
@@ -274,6 +291,7 @@ const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxURxi_T_rXH
 const PIN_REFEREE = "1234";
 const PIN_BTC = "1956";
 
+let winningScore = 30; // Mặc định là 30 điểm, BTC có thể linh hoạt chỉnh trên giao diện
 let currentRole = 'guest';
 let isTeamsLocked = false;
 
@@ -317,6 +335,18 @@ window.addEventListener('DOMContentLoaded', () => {
     recalculateTeamsCount();
     updateAccessControl();
 });
+
+// HÀM CẬP NHẬT ĐIỂM KẾT THÚC VÀ ĐỒNG BỘ NGHUYÊN TRẠNG LÊN FIREBASE
+function updateWinningScore(val) {
+    if (currentRole !== 'btc') return;
+    const score = parseInt(val) || 50;
+    winningScore = score;
+    
+    if (window.dbSet && window.dbConfigRef) {
+        window.dbSet(window.dbConfigRef, { winningScore: score });
+    }
+    renderCourts();
+}
 
 function recalculateTeamsCount() {
     const targetCount = parseInt(document.getElementById('targetPlayerCount').value) || currentPlayers.length || 29;
@@ -408,7 +438,7 @@ function toggleAuthRole() {
         currentRole = 'guest';
         alert("🔒 Đã chuyển về giao diện Khán giả.");
     } else {
-        const pin = prompt("Nhập mật khẩu:");
+        const pin = prompt("Nhập mã PIN (1234: Trọng tài | 1956: BTC):");
         if (pin === PIN_BTC) {
             currentRole = 'btc';
             alert("👑 Đã đăng nhập vai trò BAN TỔ CHỨC!");
@@ -449,7 +479,6 @@ function updateAccessControl() {
     renderKnockoutMatches();
 }
 
-// XÓA ĐỒNG BỘ DỮ LIỆU LÊN FIREBASE VÀ TỰ ĐỘNG CHUYỂN MÀN HÌNH KHÁN GIẢ
 function resetAllData() {
     if (currentRole !== 'btc') {
         alert("❌ Chỉ Ban tổ chức mới có quyền thực hiện thao tác này!");
@@ -474,7 +503,6 @@ function resetAllData() {
     alert("✅ Đã xóa toàn bộ dữ liệu thành công!");
 }
 
-// CHỐT DANH SÁCH & ĐỒNG BỘ NGHUYÊN TRẠNG LÊN FIREBASE KHÁN GIẢ
 function toggleLockTeams() {
     if (currentRole !== 'btc') return;
     if (generatedTeams.length === 0) {
@@ -507,7 +535,6 @@ function updateLockStatusUI() {
     }
 }
 
-// BỐC THĂM ĐỘI VÀ ĐỒNG BỘ TỰ ĐỘNG LÊN MÀN HÌNH KHÁN GIẢ
 function drawTeams() {
     if (currentRole !== 'btc') return;
     if (isTeamsLocked) {
@@ -555,7 +582,6 @@ function drawTeams() {
 
     generatedTeams.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
     
-    // ĐỒNG BỘ DỮ LIỆU TEAM MỚI CHIA LÊN FIREBASE
     if (window.dbSet && window.dbTeamsRef) {
         window.dbSet(window.dbTeamsRef, {
             teams: generatedTeams,
@@ -572,6 +598,12 @@ function renderCourts() {
 
     const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 3;
     const canEdit = (currentRole === 'btc' || currentRole === 'referee');
+
+    // Cập nhật Tiêu đề hiển thị Điểm thắng hiện tại
+    const roundTitle = document.getElementById('roundTitle');
+    if (roundTitle) {
+        roundTitle.innerText = `🏓 ĐIỀU HÀNH SÂN ĐẤU (CHẠM ${winningScore} ĐIỂM THẮNG)`;
+    }
 
     if (totalTeams === 6) {
         const roundInfo = fixedSchedule6Teams[currentRound];
@@ -601,7 +633,7 @@ function renderCourts() {
                     <b>${team2.name}:</b> <u>${p2_1}</u> & <u>${p2_2}</u>
                 `;
 
-                if (mData.finished) {
+                if (mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore) {
                     if (mData.score1 > mData.score2) winnerText = `<div class="winner-badge">🏆 ĐỘI THẮNG: ${team1.name} (${mData.score1} - ${mData.score2})</div>`;
                     else if (mData.score2 > mData.score1) winnerText = `<div class="winner-badge">🏆 ĐỘI THẮNG: ${team2.name} (${mData.score2} - ${mData.score1})</div>`;
                     else winnerText = `<div class="winner-badge" style="background:#e67e22;">🤝 TRẬN HOÀ (${mData.score1} - ${mData.score2})</div>`;
@@ -630,7 +662,7 @@ function renderCourts() {
 
             const courtCard = document.createElement('div');
             courtCard.className = 'court-box';
-            courtCard.innerHTML = `<div class="court-title">${match.title}</div>${controlHTML}<div class="court-players">${mData.finished ? winnerText : playersHTML}</div>`;
+            courtCard.innerHTML = `<div class="court-title">${match.title}</div>${controlHTML}<div class="court-players">${(mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore) ? winnerText : playersHTML}</div>`;
             courtsDiv.appendChild(courtCard);
         }
     } else {
@@ -660,7 +692,7 @@ function renderCourts() {
                 <b>${team2.name}:</b> <u>${p2_1}</u> & <u>${p2_2}</u>
             `;
 
-            if (mData.finished) {
+            if (mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore) {
                 if (mData.score1 > mData.score2) winnerText = `<div class="winner-badge">🏆 ĐỘI THẮNG: ${team1.name} (${mData.score1} - ${mData.score2})</div>`;
                 else if (mData.score2 > mData.score1) winnerText = `<div class="winner-badge">🏆 ĐỘI THẮNG: ${team2.name} (${mData.score2} - ${mData.score1})</div>`;
                 else winnerText = `<div class="winner-badge" style="background:#e67e22;">🤝 TRẬN HOÀ (${mData.score1} - ${mData.score2})</div>`;
@@ -689,7 +721,7 @@ function renderCourts() {
 
         const courtCard = document.createElement('div');
         courtCard.className = 'court-box';
-        courtCard.innerHTML = `<div class="court-title">${currentMatchInfo.title}</div>${controlHTML}<div class="court-players">${mData.finished ? winnerText : playersHTML}</div>`;
+        courtCard.innerHTML = `<div class="court-title">${currentMatchInfo.title}</div>${controlHTML}<div class="court-players">${(mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore) ? winnerText : playersHTML}</div>`;
         courtsDiv.appendChild(courtCard);
     }
 }
@@ -699,6 +731,7 @@ function adjustScore6Team(courtIdx, teamNum, delta) {
     const mData = matchData[currentRound][courtIdx];
     if (teamNum === 1) mData.score1 = Math.max(0, (mData.score1 || 0) + delta);
     if (teamNum === 2) mData.score2 = Math.max(0, (mData.score2 || 0) + delta);
+    if (mData.score1 >= winningScore || mData.score2 >= winningScore) mData.finished = true;
     renderCourts(); updateStandings(); syncFirebaseData();
 }
 
@@ -707,6 +740,9 @@ function updateMatchScore6Team(courtIdx, teamNum, val) {
     const scoreVal = parseInt(val) || 0;
     if (teamNum === 1) matchData[currentRound][courtIdx].score1 = scoreVal;
     if (teamNum === 2) matchData[currentRound][courtIdx].score2 = scoreVal;
+    if (matchData[currentRound][courtIdx].score1 >= winningScore || matchData[currentRound][courtIdx].score2 >= winningScore) {
+        matchData[currentRound][courtIdx].finished = true;
+    }
     renderCourts(); updateStandings(); syncFirebaseData();
 }
 
@@ -727,6 +763,7 @@ function adjustScore(teamNum, delta) {
     const mData = matchData[currentRound];
     if (teamNum === 1) mData.score1 = Math.max(0, (mData.score1 || 0) + delta);
     if (teamNum === 2) mData.score2 = Math.max(0, (mData.score2 || 0) + delta);
+    if (mData.score1 >= winningScore || mData.score2 >= winningScore) mData.finished = true;
     renderCourts(); updateStandings(); syncFirebaseData();
 }
 
@@ -735,6 +772,9 @@ function updateMatchScore(teamNum, val) {
     const scoreVal = parseInt(val) || 0;
     if (teamNum === 1) matchData[currentRound].score1 = scoreVal;
     if (teamNum === 2) matchData[currentRound].score2 = scoreVal;
+    if (matchData[currentRound].score1 >= winningScore || matchData[currentRound].score2 >= winningScore) {
+        matchData[currentRound].finished = true;
+    }
     renderCourts(); updateStandings(); syncFirebaseData();
 }
 
@@ -791,7 +831,7 @@ function updateStandings() {
             const roundInfo = fixedSchedule6Teams[r];
             [0, 1].forEach(cIdx => {
                 const mData = (matchData[r] && matchData[r][cIdx]) ? matchData[r][cIdx] : null;
-                if (mData && mData.finished) {
+                if (mData && (mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore)) {
                     const t1 = roundInfo.courts[cIdx].t1Idx;
                     const t2 = roundInfo.courts[cIdx].t2Idx;
 
@@ -826,7 +866,7 @@ function updateStandings() {
 
         roundSchedule.forEach(m => {
             const mData = matchData[m.roundNum];
-            if (mData && mData.finished) {
+            if (mData && (mData.finished || mData.score1 >= winningScore || mData.score2 >= winningScore)) {
                 const t1 = m.t1Idx;
                 const t2 = m.t2Idx;
 
