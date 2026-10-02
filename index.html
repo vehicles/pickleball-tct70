@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Điều Hành Pickleball TCT70</title>
+    <title>Điều Hành Pickleball TCT70 - BTC, Trọng Tài & Khán Giả</title>
     <!-- Thư viện xuất PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
@@ -12,6 +12,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // Cấu hình Firebase thực tế dự án pickleball-tct70
         const firebaseConfig = {
           apiKey: "AIzaSyBpEqXWixeZM0ecwr_yL13t9SGfseRtgEY",
           authDomain: "pickleball-tct70.firebaseapp.com",
@@ -31,6 +32,7 @@
         window.dbTeamsRef = ref(db, 'pickleball_teams');
         window.dbSet = set;
 
+        // Lắng nghe dữ liệu Vòng bảng Real-time
         onValue(window.dbRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -40,6 +42,7 @@
             }
         });
 
+        // Lắng nghe dữ liệu Vòng trong Real-time
         onValue(window.dbKnockoutRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -48,6 +51,7 @@
             }
         });
 
+        // Lắng nghe dữ liệu Đội đã chốt Real-time
         onValue(window.dbTeamsRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -95,6 +99,7 @@
         .btn-realtime { background-color: #8e44ad; color: white; }
         .btn-draw { background-color: #27ae60; color: white; }
         .btn-lock { background-color: #d35400; color: white; }
+        .btn-reset { background-color: #c0392b; color: white; }
         .btn-pdf { background-color: #e74c3c; color: white; }
 
         .round-selector { display: flex; justify-content: center; gap: 8px; margin: 15px 0; background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; flex-wrap: wrap; }
@@ -173,14 +178,14 @@
         <button id="authBtn" class="btn-auth" onclick="toggleAuthRole()">🔑 Khán giả</button>
     </div>
 
-    <!-- THANH CHUYỂN TAB VÒNG TRONG (CHỈ HIỂN THỊ KHI ĐỦ 6 TEAM) -->
+    <!-- TAB CHUYỂN VÒNG TRONG -->
     <div id="mainTabSelector" class="main-tab-selector">
         <button id="tabGroupBtn" class="btn-tab active" onclick="switchMainTab('group')">🏓 VÒNG BẢNG</button>
         <button id="tabKnockoutBtn" class="btn-tab" onclick="switchMainTab('knockout')">🏆 VÒNG TRONG (SERIE A & B)</button>
     </div>
 
     <div id="groupStageTab">
-        <!-- KHU VỰC ĐIỀU HÀNH BTC -->
+        <!-- BẢNG ĐIỀU HÀNH BAN TỔ CHỨC -->
         <div class="control-panel btc-only" style="display: none;">
             <strong>⚙ BẢNG ĐIỀU HÀNH BAN TỔ CHỨC:</strong>
             <div class="grid-inputs">
@@ -203,29 +208,33 @@
             <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 TẢI DATA SHEET</button>
             <button class="btn btn-draw" onclick="drawTeams()">🎲 BỐC THĂM TEAM</button>
             <button id="lockBtn" class="btn btn-lock" onclick="toggleLockTeams()">🔒 CHỐT DANH SÁCH VĐV</button>
+            <button class="btn btn-reset" onclick="resetAllData()">🗑️ XÓA & BỐC THĂM LẠI</button>
             <button class="btn btn-pdf" onclick="exportToPDF()">📄 XUẤT PDF</button>
         </div>
 
         <div id="statusMsg" class="status-msg"></div>
 
-        <h2>1. Danh Sách VĐV Đăng Ký (Thực tế: <span id="playerCount">0</span> VĐV)</h2>
-        <div style="max-height: 180px; overflow-y: auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 40px;">STT</th>
-                        <th>Họ và tên</th>
-                        <th style="width: 70px;">Giới tính</th>
-                        <th style="width: 80px;">Trình độ</th>
-                    </tr>
-                </thead>
-                <tbody id="playerTableBody">
-                    <tr><td colspan="4" style="text-align:center;">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
+        <!-- KHỐI DANH SÁCH VĐV ĐĂNG KÝ (SẼ ẨN KHI Ở VAI TRÒ TRỌNG TÀI) -->
+        <div id="playerListSection" class="player-list-section">
+            <h2>1. Danh Sách VĐV Đăng Ký (Thực tế: <span id="playerCount">0</span> VĐV)</h2>
+            <div style="max-height: 180px; overflow-y: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">STT</th>
+                            <th>Họ và tên</th>
+                            <th style="width: 70px;">Giới tính</th>
+                            <th style="width: 80px;">Trình độ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playerTableBody">
+                        <tr><td colspan="4" style="text-align:center;">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- DANH SÁCH NÚT CHỌN LƯỢT / TRẬN ĐẤU -->
+        <!-- DANH SÁCH NÚT CHỌN LƯỢT TRẬN -->
         <div id="roundSelector" class="round-selector"></div>
 
         <div>
@@ -234,7 +243,7 @@
             <div id="courtsGrid" class="courts-container"></div>
         </div>
 
-        <!-- KHU VỰC BẢNG XẾP HẠNG (TỰ ĐỘNG HIỂN THỊ 2 BẢNG HOẶC 1 BẢNG CHUNG) -->
+        <!-- BẢNG XẾP HẠNG -->
         <div style="margin-top: 25px;">
             <h3>🏆 BẢNG XẾP HẠNG</h3>
             <div id="standingsContainer"></div>
@@ -246,7 +255,7 @@
         </div>
     </div>
 
-    <!-- TAB VÒNG TRONG (CHỈ CHẠY KHI CÓ 6 TEAM) -->
+    <!-- TAB VÒNG TRONG -->
     <div id="knockoutStageTab" style="display: none;">
         <div class="serie-title">🥇 SERIE A (BÁN KẾT & CHUNG KẾT SERIE A)</div>
         <div class="knockout-grid" id="serieAGrid"></div>
@@ -280,7 +289,6 @@ let knockoutData = {
     finalB: { score1: 0, score2: 0, finished: false }
 };
 
-// CẤU HÌNH CỨNG CHO TRƯỜNG HỢP 6 TEAM CHIA 2 BẢNG
 const fixedSchedule6Teams = {
     1: {
         subtitle: "Sân 1: Team 1 vs Team 2 (T3 nghỉ) | Sân 2: Team 4 vs Team 5 (T6 nghỉ)",
@@ -303,13 +311,11 @@ window.addEventListener('DOMContentLoaded', () => {
     updateAccessControl();
 });
 
-// KHỞI TẠO LỊCH ĐẤU VÀ GIAO DIỆN THEO SỐ TEAM
 function generateSchedule() {
     const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
     const mainTabSelector = document.getElementById('mainTabSelector');
 
     if (totalTeams === 6) {
-        // TRƯỜNG HỢP 6 TEAM: CHIA 2 BẢNG + VÒNG TRONG
         mainTabSelector.style.display = 'flex';
         roundSchedule = [1, 2, 3];
         if (!matchData[1] || !Array.isArray(matchData[1])) {
@@ -320,7 +326,6 @@ function generateSchedule() {
             };
         }
     } else {
-        // TRƯỜNG HỢP KHÁC 6 TEAM (VÍ DỤ 3 TEAM): ĐẤU VÒNG TRÒN 1 BẢNG
         mainTabSelector.style.display = 'none';
         switchMainTab('group');
         roundSchedule = [];
@@ -401,6 +406,7 @@ function toggleAuthRole() {
     updateAccessControl();
 }
 
+// CẬP NHẬT GIAO DIỆN PHÂN QUYỀN VÀ ẨN DANH SÁCH VĐV CHO TRỌNG TÀI
 function updateAccessControl() {
     const authBtn = document.getElementById('authBtn');
     if (currentRole === 'btc') {
@@ -419,8 +425,50 @@ function updateAccessControl() {
         el.style.display = (currentRole === 'btc') ? '' : 'none';
     });
 
+    // ẨN DANH SÁCH VĐV NẾU LÀ TRỌNG TÀI
+    const playerSection = document.getElementById('playerListSection');
+    if (playerSection) {
+        playerSection.style.display = (currentRole === 'referee') ? 'none' : 'block';
+    }
+
     renderCourts();
     renderKnockoutMatches();
+}
+
+// XÓA TOÀN BỘ DỮ LIỆU ĐỂ BỐC THĂM LẠI
+function resetAllData() {
+    if (currentRole !== 'btc') {
+        alert("❌ Chỉ Ban tổ chức mới có quyền thực hiện thao tác này!");
+        return;
+    }
+
+    const confirmReset = confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả chia đội và tỷ số trận đấu để bốc thăm lại từ đầu không?");
+    if (!confirmReset) return;
+
+    isTeamsLocked = false;
+    generatedTeams = [];
+
+    generateSchedule();
+
+    knockoutData = {
+        sf1: { score1: 0, score2: 0, finished: false },
+        sf2: { score1: 0, score2: 0, finished: false },
+        finalA: { score1: 0, score2: 0, finished: false },
+        finalB: { score1: 0, score2: 0, finished: false }
+    };
+
+    if (window.dbSet) {
+        if (window.dbTeamsRef) window.dbSet(window.dbTeamsRef, { teams: [], locked: false });
+        if (window.dbRef) window.dbSet(window.dbRef, matchData);
+        if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData);
+    }
+
+    renderResultsByGroups(generatedTeams);
+    renderCourts();
+    updateStandings();
+    updateLockStatusUI();
+
+    alert("✅ Đã xóa toàn bộ dữ liệu thành công! Bạn có thể tiến hành Bốc thăm lại.");
 }
 
 function toggleLockTeams() {
@@ -517,7 +565,6 @@ function renderCourts() {
     const canEdit = (currentRole === 'btc' || currentRole === 'referee');
 
     if (totalTeams === 6) {
-        // VẼ 2 SÂN DÀNH CHO 6 TEAM
         const roundInfo = fixedSchedule6Teams[currentRound];
         document.getElementById('roundSubtitle').innerText = roundInfo.subtitle;
 
@@ -578,7 +625,6 @@ function renderCourts() {
             courtsDiv.appendChild(courtCard);
         }
     } else {
-        // VẼ 1 TRẬN VÒNG TRÒN DÀNH CHO 3 TEAM HOẶC SỐ KHÁC
         const currentMatchInfo = roundSchedule.find(r => r.roundNum === currentRound);
         if (!currentMatchInfo) return;
 
@@ -639,7 +685,6 @@ function renderCourts() {
     }
 }
 
-// XỬ LÝ ĐIỂM DÀNH CHO 6 TEAM
 function adjustScore6Team(courtIdx, teamNum, delta) {
     if (currentRole === 'guest') return;
     const mData = matchData[currentRound][courtIdx];
@@ -668,7 +713,6 @@ function resetMatch6Team(courtIdx) {
     renderCourts(); updateStandings(); syncFirebaseData();
 }
 
-// XỬ LÝ ĐIỂM DÀNH CHO 3 TEAM (VÒNG TRÒN)
 function adjustScore(teamNum, delta) {
     if (currentRole === 'guest') return;
     const mData = matchData[currentRound];
@@ -703,7 +747,6 @@ function syncFirebaseData() {
     }
 }
 
-// HIỂN THỊ BẢNG XẾP HẠNG PHÙ HỢP VỚI SỐ TEAM
 function updateStandings() {
     const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
     const container = document.getElementById('standingsContainer');
@@ -714,7 +757,6 @@ function updateStandings() {
     }
 
     if (totalTeams === 6) {
-        // TẠO BẢNG XẾP HẠNG 2 BẢNG (A & B)
         container.innerHTML = `
             <div class="standings-container">
                 <div class="standing-box">
@@ -762,7 +804,6 @@ function updateStandings() {
 
         return { groupA: groupAStats, groupB: groupBStats };
     } else {
-        // TẠO BẢNG XẾP HẠNG VÒNG TRÒN 1 BẢNG (DÀNH CHO 3 TEAM)
         container.innerHTML = `
             <div style="overflow-x: auto;">
                 <table>
