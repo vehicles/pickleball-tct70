@@ -501,24 +501,33 @@ function resetAllData() {
         return;
     }
 
-    if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả chia đội và điểm số không?")) return;
+    if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả chia đội, điểm số Vòng bảng và Vòng trong không?")) return;
 
+    // 1. Reset các biến trạng thái về mặc định
     isTeamsLocked = false;
     generatedTeams = [];
+    matchData = {}; // Xóa điểm Vòng bảng
+    knockoutData = getEmptyKnockoutData(); // Xóa sạch điểm Vòng trong (Bán kết, Chung kết)
+
+    // 2. Đặt lại cấu hình điểm mặc định
     winningScore = 25;
     knockoutWinningScore = 30;
-    knockoutData = getEmptyKnockoutData();
 
+    // 3. Tính toán lại số lượng team và cập nhật lại giao diện ngay lập tức
     recalculateTeamsCount();
+    renderCourts();
+    renderKnockoutMatches(); // Vẽ lại giao diện Vòng trong đã làm sạch
+    updateStandings();
 
+    // 4. Đồng bộ xóa sạch toàn bộ các node dữ liệu trên Firebase Realtime Database
     if (window.dbSet) {
         if (window.dbTeamsRef) window.dbSet(window.dbTeamsRef, { teams: [], locked: false });
-        if (window.dbRef) window.dbSet(window.dbRef, {});
-        if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData);
+        if (window.dbRef) window.dbSet(window.dbRef, {}); // Xóa node pickleball_matches
+        if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData); // Xóa node pickleball_knockout
         if (window.dbConfigRef) window.dbSet(window.dbConfigRef, { winningScore: 25, knockoutWinningScore: 30 });
     }
 
-    alert("✅ Đã xóa toàn bộ dữ liệu thành công!");
+    alert("✅ Đã xóa toàn bộ dữ liệu Vòng bảng và Vòng trong thành công!");
 }
 
 function toggleLockTeams() {
