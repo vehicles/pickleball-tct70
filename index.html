@@ -12,7 +12,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = {
+     const firebaseConfig = {
           apiKey: "AIzaSyBpEqXWixeZM0ecwr_yL13t9SGfseRtgEY",
           authDomain: "pickleball-tct70.firebaseapp.com",
           databaseURL: "https://pickleball-tct70-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -64,7 +64,7 @@
             updateLockStatusUI();
         });
 
-        // Lắng nghe Cấu hình Điểm thắng Real-time (Bảng & Knockout)
+        // Lắng nghe Cấu hình Điểm thắng Real-time
         onValue(window.dbConfigRef, (snapshot) => {
             const data = snapshot.val();
             winningScore = (data && data.winningScore) ? parseInt(data.winningScore) : 25;
@@ -207,17 +207,16 @@
                 </div>
                 <div>
                     <label><b>VĐV / 1 Team:</b></label>
-                    <input type="number" id="teamSize" value="4" min="2" class="input-box" oninput="recalculateTeamsCount()">
+                    <input type="number" id="teamSize" value="8" min="2" class="input-box" oninput="recalculateTeamsCount()">
                 </div>
                 <div>
                     <label><b>Số Team tự động:</b></label>
-                    <input type="number" id="customTeamCount" value="8" class="input-box" onchange="generateSchedule()">
+                    <input type="number" id="customTeamCount" value="4" class="input-box" onchange="generateSchedule()">
                 </div>
                 <div>
                     <label><b>Điểm Vòng bảng:</b></label>
                     <input type="number" id="winningScoreInput" value="25" min="10" max="100" class="input-box" onchange="updateWinningScore(this.value)">
                 </div>
-                <!-- BỔ SUNG Ô NHẬP ĐIỂM CHO VÒNG TRONG -->
                 <div>
                     <label><b>Điểm Vòng trong:</b></label>
                     <input type="number" id="knockoutWinningScoreInput" value="30" min="10" max="100" class="input-box" onchange="updateKnockoutWinningScore(this.value)">
@@ -236,7 +235,7 @@
         <div id="statusMsg" class="status-msg"></div>
 
         <div id="playerListSection" class="player-list-section">
-            <h2>DANH SÁCH VĐV(Thực tế: <span id="playerCount">0</span> VĐV)</h2>
+            <h2>Danh Sách VĐV Đăng Ký (Thực tế: <span id="playerCount">0</span> VĐV)</h2>
             <div style="max-height: 180px; overflow-y: auto;">
                 <table>
                     <thead>
@@ -290,7 +289,7 @@ const PIN_REFEREE = "1234";
 const PIN_BTC = "1956";
 
 let winningScore = 25; 
-let knockoutWinningScore = 30; // Mặc định Vòng trong chạm 30 điểm
+let knockoutWinningScore = 30; 
 let currentRole = 'guest';
 let isTeamsLocked = false;
 
@@ -324,7 +323,6 @@ window.addEventListener('DOMContentLoaded', () => {
     updateAccessControl();
 });
 
-// Cập nhật Điểm thắng Vòng bảng
 function updateWinningScore(val) {
     if (currentRole !== 'btc') return;
     const score = parseInt(val) || 25;
@@ -335,7 +333,6 @@ function updateWinningScore(val) {
     renderCourts();
 }
 
-// Cập nhật Điểm thắng Vòng trong
 function updateKnockoutWinningScore(val) {
     if (currentRole !== 'btc') return;
     const score = parseInt(val) || 30;
@@ -348,7 +345,7 @@ function updateKnockoutWinningScore(val) {
 
 function recalculateTeamsCount() {
     const targetCount = parseInt(document.getElementById('targetPlayerCount').value) || currentPlayers.length || 32;
-    const teamSize = parseInt(document.getElementById('teamSize').value) || 4;
+    const teamSize = parseInt(document.getElementById('teamSize').value) || 8;
     const calculatedTeams = Math.max(2, Math.ceil(targetCount / teamSize));
     
     document.getElementById('customTeamCount').value = calculatedTeams;
@@ -356,10 +353,39 @@ function recalculateTeamsCount() {
 }
 
 function generateSchedule() {
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 8;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
     const mainTabSelector = document.getElementById('mainTabSelector');
 
-    if (totalTeams === 6) {
+    if (totalTeams === 4) {
+        // TRƯỜNG HỢP 4 TEAM - ĐẤU SONG SONG TRÊN 2 SÂN
+        mainTabSelector.style.display = 'flex';
+        roundSchedule = [
+            {
+                roundNum: 1,
+                subtitle: "Lượt 1: Sân 1 (Team 1 vs Team 2) | Sân 2 (Team 3 vs Team 4)",
+                courts: [
+                    { title: "SÂN 1", t1Idx: 0, t2Idx: 1 },
+                    { title: "SÂN 2", t1Idx: 2, t2Idx: 3 }
+                ]
+            },
+            {
+                roundNum: 2,
+                subtitle: "Lượt 2: Sân 1 (Team 1 vs Team 3) | Sân 2 (Team 2 vs Team 4)",
+                courts: [
+                    { title: "SÂN 1", t1Idx: 0, t2Idx: 2 },
+                    { title: "SÂN 2", t1Idx: 1, t2Idx: 3 }
+                ]
+            },
+            {
+                roundNum: 3,
+                subtitle: "Lượt 3: Sân 1 (Team 1 vs Team 4) | Sân 2 (Team 2 vs Team 3)",
+                courts: [
+                    { title: "SÂN 1", t1Idx: 0, t2Idx: 3 },
+                    { title: "SÂN 2", t1Idx: 1, t2Idx: 2 }
+                ]
+            }
+        ];
+    } else if (totalTeams === 6) {
         mainTabSelector.style.display = 'flex';
         roundSchedule = [
             {
@@ -458,7 +484,7 @@ function toggleAuthRole() {
         currentRole = 'guest';
         alert("🔒 Đã chuyển về giao diện Khán giả.");
     } else {
-        const pin = prompt("Nhập mật khẩu");
+        const pin = prompt("Nhập mã");
         if (pin === PIN_BTC) {
             currentRole = 'btc';
             alert("👑 Đã đăng nhập vai trò BAN TỔ CHỨC!");
@@ -503,27 +529,23 @@ function resetAllData() {
 
     if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ kết quả chia đội, điểm số Vòng bảng và Vòng trong không?")) return;
 
-    // 1. Reset các biến trạng thái về mặc định
     isTeamsLocked = false;
     generatedTeams = [];
-    matchData = {}; // Xóa điểm Vòng bảng
-    knockoutData = getEmptyKnockoutData(); // Xóa sạch điểm Vòng trong (Bán kết, Chung kết)
+    matchData = {};
+    knockoutData = getEmptyKnockoutData();
 
-    // 2. Đặt lại cấu hình điểm mặc định
     winningScore = 25;
     knockoutWinningScore = 30;
 
-    // 3. Tính toán lại số lượng team và cập nhật lại giao diện ngay lập tức
     recalculateTeamsCount();
     renderCourts();
-    renderKnockoutMatches(); // Vẽ lại giao diện Vòng trong đã làm sạch
+    renderKnockoutMatches();
     updateStandings();
 
-    // 4. Đồng bộ xóa sạch toàn bộ các node dữ liệu trên Firebase Realtime Database
     if (window.dbSet) {
         if (window.dbTeamsRef) window.dbSet(window.dbTeamsRef, { teams: [], locked: false });
-        if (window.dbRef) window.dbSet(window.dbRef, {}); // Xóa node pickleball_matches
-        if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData); // Xóa node pickleball_knockout
+        if (window.dbRef) window.dbSet(window.dbRef, {});
+        if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData);
         if (window.dbConfigRef) window.dbSet(window.dbConfigRef, { winningScore: 25, knockoutWinningScore: 30 });
     }
 
@@ -561,7 +583,7 @@ function drawTeams() {
         return;
     }
 
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 8;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
     const shuffle = array => array.sort(() => Math.random() - 0.5);
 
     const femalesA = shuffle(currentPlayers.filter(p => p.gender === 'Nữ' && p.level === 'A'));
@@ -730,7 +752,7 @@ function syncFirebaseData() {
 }
 
 function updateStandings() {
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 8;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
     const container = document.getElementById('standingsContainer');
     if (!container) return;
 
@@ -787,6 +809,7 @@ function updateStandings() {
 
         return { groupA: groupAStats, groupB: groupBStats };
     } else {
+        // TRƯỜNG HỢP 4 TEAM: HIỂN THỊ 1 BẢNG XẾP HẠNG CHUNG
         container.innerHTML = `
             <div style="overflow-x: auto;">
                 <table>
@@ -836,6 +859,8 @@ function updateStandings() {
                 tbody.appendChild(tr);
             });
         }
+
+        return { all: stats };
     }
 }
 
@@ -877,79 +902,35 @@ function renderKnockoutMatches() {
     const standings = updateStandings();
     if (!standings) return;
 
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 8;
-    const gA = standings.groupA || [];
-    const gB = standings.groupB || [];
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
 
-    // Hiển thị mốc điểm thắng trong tiêu đề Vòng trong
     const serieATitle = document.getElementById('serieATitle');
     if (serieATitle) serieATitle.innerText = `🥇 SERIE A (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
 
     const serieBTitle = document.getElementById('serieBTitle');
     if (serieBTitle) serieBTitle.innerText = `🥈 SERIE B (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
 
-    // SERIE A (TOP 4)
-    const teamA1 = gA[0]?.name || 'Nhất A';
-    const teamA2 = gA[1]?.name || 'Nhì A';
-    const teamB1 = gB[0]?.name || 'Nhất B';
-    const teamB2 = gB[1]?.name || 'Nhì B';
+    let team1 = 'Đội 1', team2 = 'Đội 2', team3 = 'Đội 3', team4 = 'Đội 4';
 
-    let winnerSF1A = 'Thắng BK1 A', loserSF1A = 'Thua BK1 A';
-    let winnerSF2A = 'Thắng BK2 A', loserSF2A = 'Thua BK2 A';
-
-    if (knockoutData.sf1A && (knockoutData.sf1A.finished || knockoutData.sf1A.score1 >= knockoutWinningScore || knockoutData.sf1A.score2 >= knockoutWinningScore)) {
-        if (knockoutData.sf1A.score1 > knockoutData.sf1A.score2) { winnerSF1A = teamA1; loserSF1A = teamB2; }
-        else { winnerSF1A = teamB2; loserSF1A = teamA1; }
-    }
-    if (knockoutData.sf2A && (knockoutData.sf2A.finished || knockoutData.sf2A.score1 >= knockoutWinningScore || knockoutData.sf2A.score2 >= knockoutWinningScore)) {
-        if (knockoutData.sf2A.score1 > knockoutData.sf2A.score2) { winnerSF2A = teamB1; loserSF2A = teamA2; }
-        else { winnerSF2A = teamA2; loserSF2A = teamB1; }
+    if (totalTeams === 4 && standings.all) {
+        team1 = standings.all[0]?.name || 'Hạng 1';
+        team2 = standings.all[1]?.name || 'Hạng 2';
+        team3 = standings.all[2]?.name || 'Hạng 3';
+        team4 = standings.all[3]?.name || 'Hạng 4';
     }
 
     const serieAGrid = document.getElementById('serieAGrid');
     if (serieAGrid) {
         serieAGrid.innerHTML = `
-            ${createKnockoutBoxHTML('sf1A', 'BÁN KẾT 1 (SERIE A - SÂN 1)', teamA1, teamB2, knockoutData.sf1A || {score1:0, score2:0, finished:false})}
-            ${createKnockoutBoxHTML('sf2A', 'BÁN KẾT 2 (SERIE A - SÂN 2)', teamB1, teamA2, knockoutData.sf2A || {score1:0, score2:0, finished:false})}
-            ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA (SERIE A - SÂN 2)', loserSF1A, loserSF2A, knockoutData.bronzeA || {score1:0, score2:0, finished:false})}
-            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 1)', winnerSF1A, winnerSF2A, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 1)', team1, team2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
         `;
     }
 
-    // SERIE B
     const serieBGrid = document.getElementById('serieBGrid');
     if (serieBGrid) {
-        if (totalTeams === 6) {
-            const teamA3 = gA[2]?.name || 'Ba A';
-            const teamB3 = gB[2]?.name || 'Ba B';
-            serieBGrid.innerHTML = `
-                ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B', teamA3, teamB3, knockoutData.finalB || {score1:0, score2:0, finished:false})}
-            `;
-        } else if (totalTeams === 8) {
-            const teamA3 = gA[2]?.name || 'Ba A';
-            const teamA4 = gA[3]?.name || 'Tư A';
-            const teamB3 = gB[2]?.name || 'Ba B';
-            const teamB4 = gB[3]?.name || 'Tư B';
-
-            let winnerSF1B = 'Thắng BK1 B', loserSF1B = 'Thua BK1 B';
-            let winnerSF2B = 'Thắng BK2 B', loserSF2B = 'Thua BK2 B';
-
-            if (knockoutData.sf1B && (knockoutData.sf1B.finished || knockoutData.sf1B.score1 >= knockoutWinningScore || knockoutData.sf1B.score2 >= knockoutWinningScore)) {
-                if (knockoutData.sf1B.score1 > knockoutData.sf1B.score2) { winnerSF1B = teamA3; loserSF1B = teamB4; }
-                else { winnerSF1B = teamB4; loserSF1B = teamA3; }
-            }
-            if (knockoutData.sf2B && (knockoutData.sf2B.finished || knockoutData.sf2B.score1 >= knockoutWinningScore || knockoutData.sf2B.score2 >= knockoutWinningScore)) {
-                if (knockoutData.sf2B.score1 > knockoutData.sf2B.score2) { winnerSF2B = teamB3; loserSF2B = teamA4; }
-                else { winnerSF2B = teamA4; loserSF2B = teamB3; }
-            }
-
-            serieBGrid.innerHTML = `
-                ${createKnockoutBoxHTML('sf1B', 'BÁN KẾT 1 (SERIE B - SÂN 3)', teamA3, teamB4, knockoutData.sf1B || {score1:0, score2:0, finished:false})}
-                ${createKnockoutBoxHTML('sf2B', 'BÁN KẾT 2 (SERIE B - SÂN 4)', teamB3, teamA4, knockoutData.sf2B || {score1:0, score2:0, finished:false})}
-                ${createKnockoutBoxHTML('bronzeB', 'TRANH HẠNG BA (SERIE B - SÂN 4)', loserSF1B, loserSF2B, knockoutData.bronzeB || {score1:0, score2:0, finished:false})}
-                ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B (SÂN 3)', winnerSF1B, winnerSF2B, knockoutData.finalB || {score1:0, score2:0, finished:false})}
-            `;
-        }
+        serieBGrid.innerHTML = `
+            ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B (SÂN 2)', team3, team4, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+        `;
     }
 }
 
@@ -1165,40 +1146,10 @@ function renderResultsByGroups(teams) {
         return;
     }
 
-    const totalTeams = teams.length;
-
-    if (totalTeams === 6 || totalTeams === 8) {
-        const half = totalTeams / 2;
-        grid.innerHTML = `
-            <div class="group-container" style="margin-bottom: 25px;">
-                <div class="group-header" style="background:#2980b9; color:white; padding:12px; border-radius:8px; font-weight:bold; font-size:16px; text-align:center; margin-bottom:15px;">
-                    BẢNG A (Team 1 đến Team ${half})
-                </div>
-                <div id="groupAResult" class="teams-grid"></div>
-            </div>
-
-            <div class="group-container">
-                <div class="group-header" style="background:#e67e22; color:white; padding:12px; border-radius:8px; font-weight:bold; font-size:16px; text-align:center; margin-bottom:15px;">
-                    BẢNG B (Team ${half + 1} đến Team ${totalTeams})
-                </div>
-                <div id="groupBResult" class="teams-grid"></div>
-            </div>
-        `;
-
-        const groupADiv = document.getElementById('groupAResult');
-        const groupBDiv = document.getElementById('groupBResult');
-
-        teams.forEach((team, index) => {
-            const card = createTeamCardElement(team);
-            if (index < half) { groupADiv.appendChild(card); }
-            else { groupBDiv.appendChild(card); }
-        });
-    } else {
-        const singleGrid = document.createElement('div');
-        singleGrid.className = 'teams-grid';
-        teams.forEach(team => { singleGrid.appendChild(createTeamCardElement(team)); });
-        grid.appendChild(singleGrid);
-    }
+    const singleGrid = document.createElement('div');
+    singleGrid.className = 'teams-grid';
+    teams.forEach(team => { singleGrid.appendChild(createTeamCardElement(team)); });
+    grid.appendChild(singleGrid);
 }
 
 function createTeamCardElement(team) {
@@ -1244,7 +1195,7 @@ function exportToPDF() {
     const element = document.getElementById('pdfExportArea');
     const opt = {
         margin:       10,
-        filename:     'Ket_Qua_Boc_Tham_Pickleball_TCT70.pdf',
+        filename:     'Ket_Qua_Chia_Doi_Pickleball_TCT70.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
