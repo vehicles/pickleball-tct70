@@ -12,7 +12,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Cấu hình Firebase thực tế dự án pickleball-tct70
         const firebaseConfig = {
           apiKey: "AIzaSyBpEqXWixeZM0ecwr_yL13t9SGfseRtgEY",
           authDomain: "pickleball-tct70.firebaseapp.com",
@@ -33,22 +32,21 @@
         window.dbConfigRef = ref(db, 'pickleball_config');
         window.dbSet = set;
 
-        // Lắng nghe dữ liệu Vòng bảng Real-time
+        // Lắng nghe Vòng bảng
         onValue(window.dbRef, (snapshot) => {
-            const data = snapshot.val();
-            matchData = data || {};
+            matchData = snapshot.val() || {};
             renderCourts();
             updateStandings();
         });
 
-        // Lắng nghe dữ liệu Vòng trong Real-time
+        // Lắng nghe Vòng trong
         onValue(window.dbKnockoutRef, (snapshot) => {
             const data = snapshot.val();
             knockoutData = Object.assign(getEmptyKnockoutData(), data || {});
             renderKnockoutMatches();
         });
 
-        // Lắng nghe dữ liệu Đội đã chốt Real-time
+        // Lắng nghe Đội đã chốt
         onValue(window.dbTeamsRef, (snapshot) => {
             const data = snapshot.val();
             if (data && data.teams && data.teams.length > 0) {
@@ -66,13 +64,20 @@
             updateLockStatusUI();
         });
 
-        // Lắng nghe Cấu hình Điểm kết thúc Real-time (Mặc định 25 điểm)
+        // Lắng nghe Cấu hình Điểm thắng Real-time (Bảng & Knockout)
         onValue(window.dbConfigRef, (snapshot) => {
             const data = snapshot.val();
             winningScore = (data && data.winningScore) ? parseInt(data.winningScore) : 25;
-            const inputEl = document.getElementById('winningScoreInput');
-            if (inputEl) inputEl.value = winningScore;
+            knockoutWinningScore = (data && data.knockoutWinningScore) ? parseInt(data.knockoutWinningScore) : 30;
+
+            const inputGroup = document.getElementById('winningScoreInput');
+            if (inputGroup) inputGroup.value = winningScore;
+
+            const inputKnockout = document.getElementById('knockoutWinningScoreInput');
+            if (inputKnockout) inputKnockout.value = knockoutWinningScore;
+
             renderCourts();
+            renderKnockoutMatches();
             updateStandings();
         });
     </script>
@@ -180,8 +185,8 @@
                 <img id="logoImage" src="" alt="Logo Kỷ niệm 70 năm Khoa Toán - Cơ - Tin học">
             </div>
             <div class="header-title">
-                <h1>ĐIỀU HÀNH PICKLEBALL TCT70</h1>
-                <div class="subtitle">GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</div>
+                <h1>GIẢI PICKLEBALL KỶ NIỆM 70 NĂM KHOA TOÁN - CƠ - TIN HỌC</h1>
+                <div class="subtitle">ĐIỀU HÀNH PICKLEBALL TCT70</div>
             </div>
         </div>
         <button id="authBtn" class="btn-auth" onclick="toggleAuthRole()">🔑 Khán giả</button>
@@ -209,14 +214,19 @@
                     <input type="number" id="customTeamCount" value="8" class="input-box" onchange="generateSchedule()">
                 </div>
                 <div>
-                    <label><b>Điểm kết thúc:</b></label>
+                    <label><b>Điểm Vòng bảng:</b></label>
                     <input type="number" id="winningScoreInput" value="25" min="10" max="100" class="input-box" onchange="updateWinningScore(this.value)">
+                </div>
+                <!-- BỔ SUNG Ô NHẬP ĐIỂM CHO VÒNG TRONG -->
+                <div>
+                    <label><b>Điểm Vòng trong:</b></label>
+                    <input type="number" id="knockoutWinningScoreInput" value="30" min="10" max="100" class="input-box" onchange="updateKnockoutWinningScore(this.value)">
                 </div>
             </div>
         </div>
 
         <div class="button-group btc-only" style="display: none;">
-            <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 TẢI DATA SHEET</button>
+            <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 TẢI DỮ LIỆU</button>
             <button class="btn btn-draw" onclick="drawTeams()">🎲 BỐC THĂM TEAM</button>
             <button id="lockBtn" class="btn btn-lock" onclick="toggleLockTeams()">🔒 CHỐT DANH SÁCH VĐV</button>
             <button class="btn btn-reset" onclick="resetAllData()">🗑️ XÓA & BỐC THĂM LẠI</button>
@@ -264,10 +274,10 @@
     </div>
 
     <div id="knockoutStageTab" style="display: none;">
-        <div class="serie-title">🥇 SERIE A (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE A)</div>
+        <div class="serie-title" id="serieATitle">🥇 SERIE A (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE A)</div>
         <div class="knockout-grid" id="serieAGrid"></div>
 
-        <div class="serie-title" style="background: #d35400; margin-top: 30px;">🥈 SERIE B (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE B)</div>
+        <div class="serie-title" id="serieBTitle" style="background: #d35400; margin-top: 30px;">🥈 SERIE B (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE B)</div>
         <div class="knockout-grid" id="serieBGrid"></div>
     </div>
 </div>
@@ -279,7 +289,8 @@ const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxURxi_T_rXH
 const PIN_REFEREE = "1234";
 const PIN_BTC = "1956";
 
-let winningScore = 25; // Cấu hình mặc định 25 điểm
+let winningScore = 25; 
+let knockoutWinningScore = 30; // Mặc định Vòng trong chạm 30 điểm
 let currentRole = 'guest';
 let isTeamsLocked = false;
 
@@ -313,14 +324,26 @@ window.addEventListener('DOMContentLoaded', () => {
     updateAccessControl();
 });
 
+// Cập nhật Điểm thắng Vòng bảng
 function updateWinningScore(val) {
     if (currentRole !== 'btc') return;
     const score = parseInt(val) || 25;
     winningScore = score;
     if (window.dbSet && window.dbConfigRef) {
-        window.dbSet(window.dbConfigRef, { winningScore: score });
+        window.dbSet(window.dbConfigRef, { winningScore: winningScore, knockoutWinningScore: knockoutWinningScore });
     }
     renderCourts();
+}
+
+// Cập nhật Điểm thắng Vòng trong
+function updateKnockoutWinningScore(val) {
+    if (currentRole !== 'btc') return;
+    const score = parseInt(val) || 30;
+    knockoutWinningScore = score;
+    if (window.dbSet && window.dbConfigRef) {
+        window.dbSet(window.dbConfigRef, { winningScore: winningScore, knockoutWinningScore: knockoutWinningScore });
+    }
+    renderKnockoutMatches();
 }
 
 function recalculateTeamsCount() {
@@ -357,7 +380,6 @@ function generateSchedule() {
         ];
     } else if (totalTeams === 8) {
         mainTabSelector.style.display = 'flex';
-        // 8 TEAM CHIA 2 BẢNG THI ĐẤU TRÊN 4 SÂN ĐỒNG THỜI
         roundSchedule = [
             {
                 roundNum: 1,
@@ -484,6 +506,7 @@ function resetAllData() {
     isTeamsLocked = false;
     generatedTeams = [];
     winningScore = 25;
+    knockoutWinningScore = 30;
     knockoutData = getEmptyKnockoutData();
 
     recalculateTeamsCount();
@@ -492,7 +515,7 @@ function resetAllData() {
         if (window.dbTeamsRef) window.dbSet(window.dbTeamsRef, { teams: [], locked: false });
         if (window.dbRef) window.dbSet(window.dbRef, {});
         if (window.dbKnockoutRef) window.dbSet(window.dbKnockoutRef, knockoutData);
-        if (window.dbConfigRef) window.dbSet(window.dbConfigRef, { winningScore: 25 });
+        if (window.dbConfigRef) window.dbSet(window.dbConfigRef, { winningScore: 25, knockoutWinningScore: 30 });
     }
 
     alert("✅ Đã xóa toàn bộ dữ liệu thành công!");
@@ -849,6 +872,13 @@ function renderKnockoutMatches() {
     const gA = standings.groupA || [];
     const gB = standings.groupB || [];
 
+    // Hiển thị mốc điểm thắng trong tiêu đề Vòng trong
+    const serieATitle = document.getElementById('serieATitle');
+    if (serieATitle) serieATitle.innerText = `🥇 SERIE A (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+
+    const serieBTitle = document.getElementById('serieBTitle');
+    if (serieBTitle) serieBTitle.innerText = `🥈 SERIE B (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+
     // SERIE A (TOP 4)
     const teamA1 = gA[0]?.name || 'Nhất A';
     const teamA2 = gA[1]?.name || 'Nhì A';
@@ -858,11 +888,11 @@ function renderKnockoutMatches() {
     let winnerSF1A = 'Thắng BK1 A', loserSF1A = 'Thua BK1 A';
     let winnerSF2A = 'Thắng BK2 A', loserSF2A = 'Thua BK2 A';
 
-    if (knockoutData.sf1A && knockoutData.sf1A.finished) {
+    if (knockoutData.sf1A && (knockoutData.sf1A.finished || knockoutData.sf1A.score1 >= knockoutWinningScore || knockoutData.sf1A.score2 >= knockoutWinningScore)) {
         if (knockoutData.sf1A.score1 > knockoutData.sf1A.score2) { winnerSF1A = teamA1; loserSF1A = teamB2; }
         else { winnerSF1A = teamB2; loserSF1A = teamA1; }
     }
-    if (knockoutData.sf2A && knockoutData.sf2A.finished) {
+    if (knockoutData.sf2A && (knockoutData.sf2A.finished || knockoutData.sf2A.score1 >= knockoutWinningScore || knockoutData.sf2A.score2 >= knockoutWinningScore)) {
         if (knockoutData.sf2A.score1 > knockoutData.sf2A.score2) { winnerSF2A = teamB1; loserSF2A = teamA2; }
         else { winnerSF2A = teamA2; loserSF2A = teamB1; }
     }
@@ -895,11 +925,11 @@ function renderKnockoutMatches() {
             let winnerSF1B = 'Thắng BK1 B', loserSF1B = 'Thua BK1 B';
             let winnerSF2B = 'Thắng BK2 B', loserSF2B = 'Thua BK2 B';
 
-            if (knockoutData.sf1B && knockoutData.sf1B.finished) {
+            if (knockoutData.sf1B && (knockoutData.sf1B.finished || knockoutData.sf1B.score1 >= knockoutWinningScore || knockoutData.sf1B.score2 >= knockoutWinningScore)) {
                 if (knockoutData.sf1B.score1 > knockoutData.sf1B.score2) { winnerSF1B = teamA3; loserSF1B = teamB4; }
                 else { winnerSF1B = teamB4; loserSF1B = teamA3; }
             }
-            if (knockoutData.sf2B && knockoutData.sf2B.finished) {
+            if (knockoutData.sf2B && (knockoutData.sf2B.finished || knockoutData.sf2B.score1 >= knockoutWinningScore || knockoutData.sf2B.score2 >= knockoutWinningScore)) {
                 if (knockoutData.sf2B.score1 > knockoutData.sf2B.score2) { winnerSF2B = teamB3; loserSF2B = teamA4; }
                 else { winnerSF2B = teamA4; loserSF2B = teamB3; }
             }
@@ -916,7 +946,9 @@ function renderKnockoutMatches() {
 
 function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData) {
     let winnerText = '';
-    if (mData.finished) {
+    const isFinished = mData.finished || mData.score1 >= knockoutWinningScore || mData.score2 >= knockoutWinningScore;
+
+    if (isFinished) {
         if (mData.score1 > mData.score2) {
             winnerText = `<div class="winner-badge">🏆 THẮNG: ${team1Name} (${mData.score1} - ${mData.score2})</div>`;
         } else if (mData.score2 > mData.score1) {
@@ -930,15 +962,15 @@ function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData) {
     let controlHTML = canEditScore ? `
         <div class="court-score-container">
             <div class="team-score-control">
-                <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 1, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
-                <input type="number" class="score-input" value="${mData.score1}" onchange="updateKnockoutScore('${matchKey}', 1, this.value)" ${mData.finished ? 'disabled' : ''}>
-                <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 1, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
+                <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 1, -1)" ${isFinished ? 'disabled' : ''}>-</button>
+                <input type="number" class="score-input" value="${mData.score1}" onchange="updateKnockoutScore('${matchKey}', 1, this.value)" ${isFinished ? 'disabled' : ''}>
+                <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 1, 1)" ${isFinished ? 'disabled' : ''}>+</button>
             </div>
             <span style="font-size:20px; font-weight:bold;"> - </span>
             <div class="team-score-control">
-                <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 2, -1)" ${mData.finished ? 'disabled' : ''}>-</button>
-                <input type="number" class="score-input" value="${mData.score2}" onchange="updateKnockoutScore('${matchKey}', 2, this.value)" ${mData.finished ? 'disabled' : ''}>
-                <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 2, 1)" ${mData.finished ? 'disabled' : ''}>+</button>
+                <button class="btn-step btn-minus" onclick="adjustKnockoutScore('${matchKey}', 2, -1)" ${isFinished ? 'disabled' : ''}>-</button>
+                <input type="number" class="score-input" value="${mData.score2}" onchange="updateKnockoutScore('${matchKey}', 2, this.value)" ${isFinished ? 'disabled' : ''}>
+                <button class="btn-step btn-plus" onclick="adjustKnockoutScore('${matchKey}', 2, 1)" ${isFinished ? 'disabled' : ''}>+</button>
             </div>
         </div>
         <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
@@ -962,6 +994,11 @@ function adjustKnockoutScore(matchKey, teamNum, delta) {
     const mData = knockoutData[matchKey] || { score1: 0, score2: 0, finished: false };
     if (teamNum === 1) mData.score1 = Math.max(0, (mData.score1 || 0) + delta);
     if (teamNum === 2) mData.score2 = Math.max(0, (mData.score2 || 0) + delta);
+
+    if (mData.score1 >= knockoutWinningScore || mData.score2 >= knockoutWinningScore) {
+        mData.finished = true;
+    }
+
     knockoutData[matchKey] = mData;
     renderKnockoutMatches();
     syncFirebaseKnockoutData();
@@ -973,6 +1010,11 @@ function updateKnockoutScore(matchKey, teamNum, val) {
     const mData = knockoutData[matchKey] || { score1: 0, score2: 0, finished: false };
     if (teamNum === 1) mData.score1 = scoreVal;
     if (teamNum === 2) mData.score2 = scoreVal;
+
+    if (mData.score1 >= knockoutWinningScore || mData.score2 >= knockoutWinningScore) {
+        mData.finished = true;
+    }
+
     knockoutData[matchKey] = mData;
     renderKnockoutMatches();
     syncFirebaseKnockoutData();
@@ -1193,7 +1235,7 @@ function exportToPDF() {
     const element = document.getElementById('pdfExportArea');
     const opt = {
         margin:       10,
-        filename:     'Ket_Qua_Chia_Doi_Pickleball_TCT70.pdf',
+        filename:     'Ket_Qua_Boc_Tham_Pickleball_TCT70.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
