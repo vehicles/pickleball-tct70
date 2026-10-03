@@ -208,7 +208,7 @@
 
     <div id="mainTabSelector" class="main-tab-selector">
         <button id="tabGroupBtn" class="btn-tab active" onclick="switchMainTab('group')">🏓 VÒNG BẢNG</button>
-        <button id="tabKnockoutBtn" class="btn-tab" onclick="switchMainTab('knockout')">🏆 VÒNG CHUNG KẾT</button>
+        <button id="tabKnockoutBtn" class="btn-tab" onclick="switchMainTab('knockout')">🏆 VÒNG TRONG (SERIE A & B)</button>
     </div>
 
     <div id="groupStageTab">
@@ -217,15 +217,15 @@
             <div class="grid-inputs">
                 <div>
                     <label><b>Số VĐV đăng ký:</b></label>
-                    <input type="number" id="targetPlayerCount" value="32" min="1" max="200" class="input-box" oninput="syncPlayersWithTarget()">
+                    <input type="number" id="targetPlayerCount" value="30" min="1" max="200" class="input-box" oninput="syncPlayersWithTarget()">
                 </div>
                 <div>
                     <label><b>VĐV / 1 Team:</b></label>
-                    <input type="number" id="teamSize" value="8" min="2" class="input-box" oninput="recalculateTeamsCount()">
+                    <input type="number" id="teamSize" value="5" min="2" class="input-box" oninput="recalculateTeamsCount()">
                 </div>
                 <div>
                     <label><b>Số Team tự động:</b></label>
-                    <input type="number" id="customTeamCount" value="4" class="input-box" onchange="generateSchedule()">
+                    <input type="number" id="customTeamCount" value="6" class="input-box" onchange="generateSchedule()">
                 </div>
                 <div>
                     <label><b>Điểm Vòng bảng:</b></label>
@@ -313,7 +313,7 @@
         <div class="serie-title" id="serieATitle">🥇 SERIE A (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE A)</div>
         <div class="knockout-grid" id="serieAGrid"></div>
 
-        <div class="serie-title" id="serieBTitle" style="background: #d35400; margin-top: 30px;">🥈 SERIE B (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE B)</div>
+        <div class="serie-title" id="serieBTitle" style="background: #d35400; margin-top: 30px;">🥈 SERIE B (TRANH HẠNG BA & CỐNG HIẾN SERIE B)</div>
         <div class="knockout-grid" id="serieBGrid"></div>
 
         <div id="closingCeremonyBox" style="margin-top: 30px; display: none;">
@@ -399,8 +399,8 @@ function updateKnockoutWinningScore(val) {
 }
 
 function recalculateTeamsCount() {
-    const targetCount = parseInt(document.getElementById('targetPlayerCount').value) || currentPlayers.length || 32;
-    const teamSize = parseInt(document.getElementById('teamSize').value) || 8;
+    const targetCount = parseInt(document.getElementById('targetPlayerCount').value) || currentPlayers.length || 30;
+    const teamSize = parseInt(document.getElementById('teamSize').value) || 5;
     const calculatedTeams = Math.max(2, Math.ceil(targetCount / teamSize));
     
     document.getElementById('customTeamCount').value = calculatedTeams;
@@ -408,89 +408,29 @@ function recalculateTeamsCount() {
 }
 
 function generateSchedule() {
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
     const mainTabSelector = document.getElementById('mainTabSelector');
 
     if (totalTeams === 4) {
         mainTabSelector.style.display = 'flex';
         roundSchedule = [
-            {
-                roundNum: 1,
-                subtitle: "Lượt 1: Sân 1 (Team 1 vs Team 2) | Sân 2 (Team 3 vs Team 4)",
-                courts: [
-                    { title: "SÂN 1", t1Idx: 0, t2Idx: 1 },
-                    { title: "SÂN 2", t1Idx: 2, t2Idx: 3 }
-                ]
-            },
-            {
-                roundNum: 2,
-                subtitle: "Lượt 2: Sân 1 (Team 1 vs Team 3) | Sân 2 (Team 2 vs Team 4)",
-                courts: [
-                    { title: "SÂN 1", t1Idx: 0, t2Idx: 2 },
-                    { title: "SÂN 2", t1Idx: 1, t2Idx: 3 }
-                ]
-            },
-            {
-                roundNum: 3,
-                subtitle: "Lượt 3: Sân 1 (Team 1 vs Team 4) | Sân 2 (Team 2 vs Team 3)",
-                courts: [
-                    { title: "SÂN 1", t1Idx: 0, t2Idx: 3 },
-                    { title: "SÂN 2", t1Idx: 1, t2Idx: 2 }
-                ]
-            }
+            { roundNum: 1, subtitle: "Lượt 1: Sân 1 (Team 1 vs Team 2) | Sân 2 (Team 3 vs Team 4)", courts: [{ title: "SÂN 1", t1Idx: 0, t2Idx: 1 }, { title: "SÂN 2", t1Idx: 2, t2Idx: 3 }] },
+            { roundNum: 2, subtitle: "Lượt 2: Sân 1 (Team 1 vs Team 3) | Sân 2 (Team 2 vs Team 4)", courts: [{ title: "SÂN 1", t1Idx: 0, t2Idx: 2 }, { title: "SÂN 2", t1Idx: 1, t2Idx: 3 }] },
+            { roundNum: 3, subtitle: "Lượt 3: Sân 1 (Team 1 vs Team 4) | Sân 2 (Team 2 vs Team 3)", courts: [{ title: "SÂN 1", t1Idx: 0, t2Idx: 3 }, { title: "SÂN 2", t1Idx: 1, t2Idx: 2 }] }
         ];
     } else if (totalTeams === 6) {
         mainTabSelector.style.display = 'flex';
         roundSchedule = [
-            {
-                roundNum: 1,
-                subtitle: "Sân 1: Team 1 vs Team 2 | Sân 2: Team 4 vs Team 5",
-                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 4 }]
-            },
-            {
-                roundNum: 2,
-                subtitle: "Sân 1: Team 1 vs Team 3 | Sân 2: Team 4 vs Team 6",
-                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 5 }]
-            },
-            {
-                roundNum: 3,
-                subtitle: "Sân 1: Team 2 vs Team 3 | Sân 2: Team 5 vs Team 6",
-                courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 1, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 5 }]
-            }
+            { roundNum: 1, subtitle: "Sân 1: Team 1 vs Team 2 | Sân 2: Team 4 vs Team 5", courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 4 }] },
+            { roundNum: 2, subtitle: "Sân 1: Team 1 vs Team 3 | Sân 2: Team 4 vs Team 6", courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 3, t2Idx: 5 }] },
+            { roundNum: 3, subtitle: "Sân 1: Team 2 vs Team 3 | Sân 2: Team 5 vs Team 6", courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 1, t2Idx: 2 }, { title: "SÂN 2 (BẢNG B)", t1Idx: 4, t2Idx: 5 }] }
         ];
     } else if (totalTeams === 8) {
         mainTabSelector.style.display = 'flex';
         roundSchedule = [
-            {
-                roundNum: 1,
-                subtitle: "Lượt 1: Bảng A (Sân 1 & 2) | Bảng B (Sân 3 & 4)",
-                courts: [
-                    { title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 },
-                    { title: "SÂN 2 (BẢNG A)", t1Idx: 2, t2Idx: 3 },
-                    { title: "SÂN 3 (BẢNG B)", t1Idx: 4, t2Idx: 5 },
-                    { title: "SÂN 4 (BẢNG B)", t1Idx: 6, t2Idx: 7 }
-                ]
-            },
-            {
-                roundNum: 2,
-                subtitle: "Lượt 2: Bảng A (Sân 1 & 2) | Bảng B (Sân 3 & 4)",
-                courts: [
-                    { title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 },
-                    { title: "SÂN 2 (BẢNG A)", t1Idx: 1, t2Idx: 3 },
-                    { title: "SÂN 3 (BẢNG B)", t1Idx: 4, t2Idx: 6 },
-                    { title: "SÂN 4 (BẢNG B)", t1Idx: 5, t2Idx: 7 }
-                ]
-            },
-            {
-                roundNum: 3,
-                subtitle: "Lượt 3: Bảng A (Sân 1 & 2) | Bảng B (Sân 3 & 4)",
-                courts: [
-                    { title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 3 },
-                    { title: "SÂN 2 (BẢNG A)", t1Idx: 1, t2Idx: 2 },
-                    { title: "SÂN 3 (BẢNG B)", t1Idx: 4, t2Idx: 7 },
-                    { title: "SÂN 4 (BẢNG B)", t1Idx: 5, t2Idx: 6 }
-                ]
-            }
+            { roundNum: 1, subtitle: "Lượt 1: Bảng A (Sân 1 & 2) | Bảng B (Sân 3 & 4)", courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 1 }, { title: "SÂN 2 (BẢNG A)", t1Idx: 2, t2Idx: 3 }, { title: "SÂN 3 (BẢNG B)", t1Idx: 4, t2Idx: 5 }, { title: "SÂN 4 (BẢNG B)", t1Idx: 6, t2Idx: 7 }] },
+            { roundNum: 2, subtitle: "Lượt 2: Bảng A (Sân 1 & 2) | Bảng B (Sân 3 & 4)", courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 2 }, { title: "SÂN 2 (BẢNG A)", t1Idx: 1, t2Idx: 3 }, { title: "SÂN 3 (BẢNG B)", t1Idx: 4, t2Idx: 6 }, { title: "SÂN 4 (BẢNG B)", t1Idx: 5, t2Idx: 7 }] },
+            { roundNum: 3, subtitle: "Lượt 3: Bảng A (Sân 1 & 2) | Bảng B (Sân 3 & 4)", courts: [{ title: "SÂN 1 (BẢNG A)", t1Idx: 0, t2Idx: 3 }, { title: "SÂN 2 (BẢNG A)", t1Idx: 1, t2Idx: 2 }, { title: "SÂN 3 (BẢNG B)", t1Idx: 4, t2Idx: 7 }, { title: "SÂN 4 (BẢNG B)", t1Idx: 5, t2Idx: 6 }] }
         ];
     } else {
         mainTabSelector.style.display = 'none';
@@ -499,11 +439,7 @@ function generateSchedule() {
         let matchCount = 1;
         for (let i = 0; i < totalTeams; i++) {
             for (let j = i + 1; j < totalTeams; j++) {
-                roundSchedule.push({
-                    roundNum: matchCount,
-                    subtitle: `Team ${i + 1} vs Team ${j + 1}`,
-                    courts: [{ title: `TRẬN ${matchCount}`, t1Idx: i, t2Idx: j }]
-                });
+                roundSchedule.push({ roundNum: matchCount, subtitle: `Team ${i + 1} vs Team ${j + 1}`, courts: [{ title: `TRẬN ${matchCount}`, t1Idx: i, t2Idx: j }] });
                 matchCount++;
             }
         }
@@ -538,7 +474,7 @@ function toggleAuthRole() {
         currentRole = 'guest';
         alert("🔒 Đã chuyển về giao diện Khán giả.");
     } else {
-        const pin = prompt("Nhập mã");
+        const pin = prompt("Nhập mã:");
         if (pin === PIN_BTC) {
             currentRole = 'btc';
             alert("👑 Đã đăng nhập vai trò BAN TỔ CHỨC!");
@@ -639,7 +575,7 @@ function drawTeams() {
         return;
     }
 
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
     const shuffle = array => array.sort(() => Math.random() - 0.5);
 
     const femalesA = shuffle(currentPlayers.filter(p => p.gender === 'Nữ' && p.level === 'A'));
@@ -686,7 +622,6 @@ function drawTeams() {
     generateSchedule();
 }
 
-/* HÀM CHỈNH SỬA THÔNG TIN CỦA MỘT VĐV */
 function editPlayer(index) {
     if (currentRole !== 'btc') {
         alert("❌ Chỉ Ban tổ chức mới có quyền chỉnh sửa thông tin VĐV!");
@@ -746,7 +681,6 @@ function editPlayer(index) {
     alert(`✅ Đã cập nhật VĐV thành: ${player.name} (${player.gender} - Trình ${player.level})`);
 }
 
-/* HÀM XÓA VĐV KHỎI DANH SÁCH VÀ ĐỘI BÓNG */
 function deletePlayer(index) {
     if (currentRole !== 'btc') {
         alert("❌ Chỉ Ban tổ chức mới có quyền xóa VĐV!");
@@ -756,19 +690,12 @@ function deletePlayer(index) {
     const player = currentPlayers[index];
     if (!player) return;
 
-    if (!confirm(`⚠️ Bạn có chắc chắn muốn XÓA VĐV "${player.name}" khỏi danh sách thi đấu không?`)) {
-        return;
-    }
+    if (!confirm(`⚠️ Bạn có chắc chắn muốn XÓA VĐV "${player.name}" khỏi danh sách thi đấu không?`)) return;
 
     const deletedName = player.name;
-
-    // 1. Xóa VĐV khỏi mảng currentPlayers
     currentPlayers.splice(index, 1);
-
-    // 2. Cập nhật lại số lượng VĐV hiển thị trên ô nhập
     document.getElementById('targetPlayerCount').value = currentPlayers.length;
 
-    // 3. Xóa VĐV trong mảng generatedTeams nếu đã chia đội
     if (generatedTeams && generatedTeams.length > 0) {
         generatedTeams.forEach(team => {
             team.members = team.members.filter(m => m.name !== deletedName);
@@ -781,7 +708,6 @@ function deletePlayer(index) {
         }
     }
 
-    // 4. Vẽ lại giao diện
     renderInputTable(currentPlayers);
     renderResultsByGroups(generatedTeams);
     renderCourts();
@@ -936,7 +862,7 @@ function syncFirebaseData() {
 }
 
 function updateStandings() {
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
     const container = document.getElementById('standingsContainer');
     if (!container) return;
 
@@ -1081,77 +1007,119 @@ function switchMainTab(tab) {
     }
 }
 
+/* LOGIC VÒNG TRONG CHO TRƯỜNG HỢP 6 TEAM & 4 TEAM */
 function renderKnockoutMatches() {
     const standings = updateStandings();
     if (!standings) return;
 
-    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
+    const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
 
     const serieATitle = document.getElementById('serieATitle');
-    if (serieATitle) serieATitle.innerText = `🥇 TRANH HẠNG NHẤT & NHÌ (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    if (serieATitle) serieATitle.innerText = `🥇 SERIE A - BÁN KẾT & CHUNG KẾT SERIE A (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
 
     const serieBTitle = document.getElementById('serieBTitle');
-    if (serieBTitle) serieBTitle.innerText = `🥈 TRANH HẠNG BA & CỐNG HIẾN (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    if (serieBTitle) serieBTitle.innerText = `🥈 SERIE B - CHUNG KẾT SERIE B (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
 
-    let team1 = 'Đội 1', team2 = 'Đội 2', team3 = 'Đội 3', team4 = 'Đội 4';
+    let teamSF1_1 = 'Hạng 1A', teamSF1_2 = 'Hạng 2B';
+    let teamSF2_1 = 'Hạng 1B', teamSF2_2 = 'Hạng 2A';
+    let teamB_1 = 'Hạng 3A', teamB_2 = 'Hạng 3B';
 
-    if (totalTeams === 4 && standings.all) {
-        team1 = standings.all[0]?.name || 'Hạng 1';
-        team2 = standings.all[1]?.name || 'Hạng 2';
-        team3 = standings.all[2]?.name || 'Hạng 3';
-        team4 = standings.all[3]?.name || 'Hạng 4';
+    if (totalTeams === 6 && standings.groupA && standings.groupB) {
+        teamSF1_1 = standings.groupA[0]?.name || 'Hạng 1A';
+        teamSF1_2 = standings.groupB[1]?.name || 'Hạng 2B';
+
+        teamSF2_1 = standings.groupB[0]?.name || 'Hạng 1B';
+        teamSF2_2 = standings.groupA[1]?.name || 'Hạng 2A';
+
+        teamB_1 = standings.groupA[2]?.name || 'Hạng 3A';
+        teamB_2 = standings.groupB[2]?.name || 'Hạng 3B';
+    } else if (totalTeams === 4 && standings.all) {
+        teamSF1_1 = standings.all[0]?.name || 'Hạng 1';
+        teamSF1_2 = standings.all[1]?.name || 'Hạng 2';
+        teamB_1 = standings.all[2]?.name || 'Hạng 3';
+        teamB_2 = standings.all[3]?.name || 'Hạng 4';
+    }
+
+    const sf1A = knockoutData.sf1A || { score1: 0, score2: 0, finished: false };
+    const sf2A = knockoutData.sf2A || { score1: 0, score2: 0, finished: false };
+
+    // Tự động xác định đội thắng/thua Bán kết
+    let winnerSF1 = 'Thắng BK 1', loserSF1 = 'Thua BK 1';
+    let winnerSF2 = 'Thắng BK 2', loserSF2 = 'Thua BK 2';
+
+    if (sf1A.finished || sf1A.score1 >= knockoutWinningScore || sf1A.score2 >= knockoutWinningScore) {
+        winnerSF1 = sf1A.score1 > sf1A.score2 ? teamSF1_1 : teamSF1_2;
+        loserSF1 = sf1A.score1 > sf1A.score2 ? teamSF1_2 : teamSF1_1;
+    }
+
+    if (sf2A.finished || sf2A.score1 >= knockoutWinningScore || sf2A.score2 >= knockoutWinningScore) {
+        winnerSF2 = sf2A.score1 > sf2A.score2 ? teamSF2_1 : teamSF2_2;
+        loserSF2 = sf2A.score1 > sf2A.score2 ? teamSF2_2 : teamSF2_1;
     }
 
     const serieAGrid = document.getElementById('serieAGrid');
     if (serieAGrid) {
-        serieAGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT (SÂN 1)', team1, team2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
-        `;
+        if (totalTeams === 6) {
+            serieAGrid.innerHTML = `
+                ${createKnockoutBoxHTML('sf1A', 'BÁN KẾT 1 SERIE A (SÂN 1)', teamSF1_1, teamSF1_2, sf1A)}
+                ${createKnockoutBoxHTML('sf2A', 'BÁN KẾT 2 SERIE A (SÂN 2)', teamSF2_1, teamSF2_2, sf2A)}
+                ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA SERIE A (SÂN 1)', loserSF1, loserSF2, knockoutData.bronzeA || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 2)', winnerSF1, winnerSF2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+            `;
+        } else {
+            serieAGrid.innerHTML = `
+                ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 1)', teamSF1_1, teamSF1_2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+            `;
+        }
     }
 
     const serieBGrid = document.getElementById('serieBGrid');
     if (serieBGrid) {
         serieBGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalB', 'TRANH HẠNG BA (SÂN 2)', team3, team4, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B (SÂN 2)', teamB_1, teamB_2, knockoutData.finalB || {score1:0, score2:0, finished:false})}
         `;
     }
 
+    // Hiển thị bảng Tổng kết Trao giải Bế mạc khi các trận Chung kết hoàn tất
     const closingBox = document.getElementById('closingCeremonyBox');
     const ceremonyBody = document.getElementById('ceremonyTableBody');
     if (closingBox && ceremonyBody) {
         const finalA = knockoutData.finalA || {};
         const finalB = knockoutData.finalB || {};
+        const bronzeA = knockoutData.bronzeA || {};
 
         if ((finalA.finished || finalA.score1 >= knockoutWinningScore || finalA.score2 >= knockoutWinningScore) &&
             (finalB.finished || finalB.score1 >= knockoutWinningScore || finalB.score2 >= knockoutWinningScore)) {
             
             closingBox.style.display = 'block';
 
-            let winnerA = finalA.score1 > finalA.score2 ? team1 : team2;
-            let runnerA = finalA.score1 > finalA.score2 ? team2 : team1;
+            let winnerA = finalA.score1 > finalA.score2 ? winnerSF1 : winnerSF2;
+            let runnerA = finalA.score1 > finalA.score2 ? winnerSF2 : winnerSF1;
 
-            let winnerB = finalB.score1 > finalB.score2 ? team3 : team4;
-            let runnerB = finalB.score1 > finalB.score2 ? team4 : team3;
+            let bronzeWinnerA = bronzeA.score1 > bronzeA.score2 ? loserSF1 : loserSF2;
+            let bronzeRunnerA = bronzeA.score1 > bronzeA.score2 ? loserSF2 : loserSF1;
+
+            let winnerB = finalB.score1 > finalB.score2 ? teamB_1 : teamB_2;
 
             ceremonyBody.innerHTML = `
                 <tr>
-                    <td style="text-align:center; font-weight:bold; color:#f39c12;">🥇 HẠNG NHẤT</td>
+                    <td style="text-align:center; font-weight:bold; color:#f39c12;">🥇 HẠNG NHẤT SERIE A</td>
                     <td><b>${winnerA}</b></td>
                     <td>Cúp Vô Địch + Huy chương Hạng Nhất</td>
                 </tr>
                 <tr>
-                    <td style="text-align:center; font-weight:bold; color:#7f8c8d;">🥈 HẠNG NHÌ</td>
+                    <td style="text-align:center; font-weight:bold; color:#7f8c8d;">🥈 HẠNG NHÌ SERIE A</td>
                     <td><b>${runnerA}</b></td>
                     <td>Cúp Hạng Nhì + Huy chương Hạng Nhì</td>
                 </tr>
                 <tr>
-                    <td style="text-align:center; font-weight:bold; color:#d35400;">🥉 HẠNG BA</td>
-                    <td><b>${winnerB}</b></td>
+                    <td style="text-align:center; font-weight:bold; color:#d35400;">🥉 HẠNG BA SERIE A</td>
+                    <td><b>${bronzeWinnerA}</b></td>
                     <td>Cúp Hạng Ba + Huy chương Hạng Ba</td>
                 </tr>
                 <tr>
-                    <td style="text-align:center; font-weight:bold; color:#27ae60;">🏅 HẠNG TƯ</td>
-                    <td><b>${runnerB}</b></td>
+                    <td style="text-align:center; font-weight:bold; color:#27ae60;">🏅 VÔ ĐỊCH SERIE B</td>
+                    <td><b>${winnerB}</b></td>
                     <td>Giải Cống hiến + Huy chương Cống hiến</td>
                 </tr>
             `;
@@ -1290,9 +1258,7 @@ function loadBackupData() {
         { name: "Hoàng Minh Vỹ", gender: "Nam", level: "A" },
         { name: "Nguyễn Thị Hồng Khánh", gender: "Nữ", level: "B" },
         { name: "Lê Lệ Hằng", gender: "Nữ", level: "B" },
-        { name: "VĐV Bổ Sung 30", gender: "Nam", level: "A" },
-        { name: "VĐV Bổ Sung 31", gender: "Nam", level: "B" },
-        { name: "VĐV Bổ Sung 32", gender: "Nữ", level: "A" }
+        { name: "VĐV Bổ Sung 30", gender: "Nam", level: "A" }
     ];
     syncPlayersWithTarget();
 }
@@ -1346,7 +1312,6 @@ async function fetchRealtimeData() {
     }
 }
 
-/* RENDERING BẢNG DANH SÁCH CÓ NÚT SỬA VÀ XÓA DÀNH CHO BTC */
 function renderInputTable(players) {
     const tbody = document.getElementById('playerTableBody');
     document.getElementById('playerCount').innerText = players.length;
