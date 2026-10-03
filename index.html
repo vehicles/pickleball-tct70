@@ -194,7 +194,7 @@
 
     <div id="mainTabSelector" class="main-tab-selector">
         <button id="tabGroupBtn" class="btn-tab active" onclick="switchMainTab('group')">🏓 VÒNG BẢNG</button>
-        <button id="tabKnockoutBtn" class="btn-tab" onclick="switchMainTab('knockout')">🏆 VÒNG TRONG (SERIE A & B)</button>
+        <button id="tabKnockoutBtn" class="btn-tab" onclick="switchMainTab('knockout')">🏆 VÒNG CHUNG KẾT</button>
     </div>
 
     <div id="groupStageTab">
@@ -273,10 +273,10 @@
     </div>
 
     <div id="knockoutStageTab" style="display: none;">
-        <div class="serie-title" id="serieATitle">🥇 SERIE A (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE A)</div>
+        <div class="serie-title" id="serieATitle">🥇 CHUNG KẾT</div>
         <div class="knockout-grid" id="serieAGrid"></div>
 
-        <div class="serie-title" id="serieBTitle" style="background: #d35400; margin-top: 30px;">🥈 SERIE B (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE B)</div>
+        <div class="serie-title" id="serieBTitle" style="background: #d35400; margin-top: 30px;">🥈 TRANH HẠNG BA</div>
         <div class="knockout-grid" id="serieBGrid"></div>
     </div>
 </div>
@@ -922,14 +922,14 @@ function renderKnockoutMatches() {
     const serieAGrid = document.getElementById('serieAGrid');
     if (serieAGrid) {
         serieAGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 1)', team1, team2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT (SÂN 1)', team1, team2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
         `;
     }
 
     const serieBGrid = document.getElementById('serieBGrid');
     if (serieBGrid) {
         serieBGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B (SÂN 2)', team3, team4, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalB', 'TRANH HẠNG 3 (SÂN 2)', team3, team4, knockoutData.finalB || {score1:0, score2:0, finished:false})}
         `;
     }
 }
