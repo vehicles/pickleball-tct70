@@ -1008,22 +1008,34 @@ function switchMainTab(tab) {
 }
 
 /* LOGIC VÒNG TRONG CHO TRƯỜNG HỢP 6 TEAM & 4 TEAM */
+/**
+ * Hàm hiển thị và cập nhật kết quả Vòng trong (Knockout - Serie A & Serie B)
+ * Tự động tính toán các đội đoạt giải và hiển thị Bảng Tổng kết Bế mạc
+ */
 function renderKnockoutMatches() {
+    // 1. Cập nhật bảng xếp hạng Vòng bảng để lấy danh sách đội
     const standings = updateStandings();
     if (!standings) return;
 
     const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
 
+    // 2. Cập nhật tiêu đề hiển thị điểm thắng cho từng Serie
     const serieATitle = document.getElementById('serieATitle');
-    if (serieATitle) serieATitle.innerText = `🥇 SERIE A - BÁN KẾT & CHUNG KẾT SERIE A (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    if (serieATitle) {
+        serieATitle.innerText = `🥇 SERIE A - BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE A (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    }
 
     const serieBTitle = document.getElementById('serieBTitle');
-    if (serieBTitle) serieBTitle.innerText = `🥈 SERIE B - CHUNG KẾT SERIE B (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    if (serieBTitle) {
+        serieBTitle.innerText = `🏆 SERIE B - CHUNG KẾT SERIE B (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    }
 
+    // 3. Khai báo các tên đội mặc định theo suất Vòng bảng
     let teamSF1_1 = 'Hạng 1A', teamSF1_2 = 'Hạng 2B';
     let teamSF2_1 = 'Hạng 1B', teamSF2_2 = 'Hạng 2A';
     let teamB_1 = 'Hạng 3A', teamB_2 = 'Hạng 3B';
 
+    // Gán tên đội thực tế từ Bảng xếp hạng Vòng bảng
     if (totalTeams === 6 && standings.groupA && standings.groupB) {
         teamSF1_1 = standings.groupA[0]?.name || 'Hạng 1A';
         teamSF1_2 = standings.groupB[1]?.name || 'Hạng 2B';
@@ -1040,23 +1052,26 @@ function renderKnockoutMatches() {
         teamB_2 = standings.all[3]?.name || 'Hạng 4';
     }
 
+    // 4. Lấy dữ liệu điểm số các trận Bán kết
     const sf1A = knockoutData.sf1A || { score1: 0, score2: 0, finished: false };
     const sf2A = knockoutData.sf2A || { score1: 0, score2: 0, finished: false };
 
-    // Tự động xác định đội thắng/thua Bán kết
     let winnerSF1 = 'Thắng BK 1', loserSF1 = 'Thua BK 1';
     let winnerSF2 = 'Thắng BK 2', loserSF2 = 'Thua BK 2';
 
+    // Xác định đội thắng/thua Bán kết 1
     if (sf1A.finished || sf1A.score1 >= knockoutWinningScore || sf1A.score2 >= knockoutWinningScore) {
         winnerSF1 = sf1A.score1 > sf1A.score2 ? teamSF1_1 : teamSF1_2;
         loserSF1 = sf1A.score1 > sf1A.score2 ? teamSF1_2 : teamSF1_1;
     }
 
+    // Xác định đội thắng/thua Bán kết 2
     if (sf2A.finished || sf2A.score1 >= knockoutWinningScore || sf2A.score2 >= knockoutWinningScore) {
         winnerSF2 = sf2A.score1 > sf2A.score2 ? teamSF2_1 : teamSF2_2;
         loserSF2 = sf2A.score1 > sf2A.score2 ? teamSF2_2 : teamSF2_1;
     }
 
+    // 5. Vẽ khung các trận đấu Serie A
     const serieAGrid = document.getElementById('serieAGrid');
     if (serieAGrid) {
         if (totalTeams === 6) {
@@ -1073,6 +1088,7 @@ function renderKnockoutMatches() {
         }
     }
 
+    // 6. Vẽ khung trận đấu Serie B
     const serieBGrid = document.getElementById('serieBGrid');
     if (serieBGrid) {
         serieBGrid.innerHTML = `
@@ -1080,7 +1096,7 @@ function renderKnockoutMatches() {
         `;
     }
 
-    // Hiển thị bảng Tổng kết Trao giải Bế mạc khi các trận Chung kết hoàn tất
+    // 7. Cập nhật Bảng Tổng kết Trao giải Bế mạc khi các trận Chung kết kết thúc
     const closingBox = document.getElementById('closingCeremonyBox');
     const ceremonyBody = document.getElementById('ceremonyTableBody');
     if (closingBox && ceremonyBody) {
@@ -1088,39 +1104,55 @@ function renderKnockoutMatches() {
         const finalB = knockoutData.finalB || {};
         const bronzeA = knockoutData.bronzeA || {};
 
+        // Kiểm tra nếu cả 2 trận Chung kết đã kết thúc
         if ((finalA.finished || finalA.score1 >= knockoutWinningScore || finalA.score2 >= knockoutWinningScore) &&
             (finalB.finished || finalB.score1 >= knockoutWinningScore || finalB.score2 >= knockoutWinningScore)) {
             
             closingBox.style.display = 'block';
 
+            // Đội thắng & thua Chung kết Serie A (Nhất & Nhì)
             let winnerA = finalA.score1 > finalA.score2 ? winnerSF1 : winnerSF2;
             let runnerA = finalA.score1 > finalA.score2 ? winnerSF2 : winnerSF1;
 
+            // Đội thắng & thua Tranh Hạng Ba Serie A (Ba & Tư)
             let bronzeWinnerA = bronzeA.score1 > bronzeA.score2 ? loserSF1 : loserSF2;
-            let bronzeRunnerA = bronzeA.score1 > bronzeA.score2 ? loserSF2 : loserSF1;
+            let fourthPlaceA = bronzeA.score1 > bronzeA.score2 ? loserSF2 : loserSF1;
 
+            // Đội thắng & thua Chung kết Serie B (Vô địch & Nhì Serie B)
             let winnerB = finalB.score1 > finalB.score2 ? teamB_1 : teamB_2;
+            let runnerB = finalB.score1 > finalB.score2 ? teamB_2 : teamB_1;
 
-            ceremonyBody.innerHTML = `
+            // Đưa thông tin vào bảng HTML
+            ceremonyTableBody.innerHTML = `
                 <tr>
-                    <td style="text-align:center; font-weight:bold; color:#f39c12;">🥇 HẠNG NHẤT SERIE A</td>
+                    <td style="text-align:center; font-weight:bold; color:#f39c12;">🥇 VÔ ĐỊCH SERIE A</td>
                     <td><b>${winnerA}</b></td>
-                    <td>Cúp Vô Địch + Huy chương Hạng Nhất</td>
+                    <td>Cúp + Huy chương Vàng Serie A</td>
                 </tr>
                 <tr>
                     <td style="text-align:center; font-weight:bold; color:#7f8c8d;">🥈 HẠNG NHÌ SERIE A</td>
                     <td><b>${runnerA}</b></td>
-                    <td>Cúp Hạng Nhì + Huy chương Hạng Nhì</td>
+                    <td>Huy chương Bạc Serie A</td>
                 </tr>
                 <tr>
                     <td style="text-align:center; font-weight:bold; color:#d35400;">🥉 HẠNG BA SERIE A</td>
                     <td><b>${bronzeWinnerA}</b></td>
-                    <td>Cúp Hạng Ba + Huy chương Hạng Ba</td>
+                    <td>Huy chương Đồng Serie A</td>
                 </tr>
                 <tr>
-                    <td style="text-align:center; font-weight:bold; color:#27ae60;">🏅 VÔ ĐỊCH SERIE B</td>
+                    <td style="text-align:center; font-weight:bold; color:#e67e22;">🏅 HẠNG TƯ SERIE A</td>
+                    <td><b>${fourthPlaceA}</b></td>
+                    <td>Huy chương Cống hiến Serie A</td>
+                </tr>
+                <tr style="border-top: 2px solid #1a5276;">
+                    <td style="text-align:center; font-weight:bold; color:#27ae60;">🏆 VÔ ĐỊCH SERIE B</td>
                     <td><b>${winnerB}</b></td>
-                    <td>Giải Cống hiến + Huy chương Cống hiến</td>
+                    <td>Cúp Vô Địch Serie B + Huy chương Serie B</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center; font-weight:bold; color:#16a085;">🎗️ HẠNG NHÌ SERIE B</td>
+                    <td><b>${runnerB}</b></td>
+                    <td>Huy chương Bạc Serie B</td>
                 </tr>
             `;
         } else {
