@@ -905,10 +905,10 @@ function renderKnockoutMatches() {
     const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
 
     const serieATitle = document.getElementById('serieATitle');
-    if (serieATitle) serieATitle.innerText = `🥇 SERIE A (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    if (serieATitle) serieATitle.innerText = `🥇 CHUNG KẾT (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
 
     const serieBTitle = document.getElementById('serieBTitle');
-    if (serieBTitle) serieBTitle.innerText = `🥈 SERIE B (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    if (serieBTitle) serieBTitle.innerText = `🥈 TRANH HẠNG BA (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
 
     let team1 = 'Đội 1', team2 = 'Đội 2', team3 = 'Đội 3', team4 = 'Đội 4';
 
