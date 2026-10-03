@@ -12,7 +12,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-     const firebaseConfig = {
+        const firebaseConfig = {
           apiKey: "AIzaSyBpEqXWixeZM0ecwr_yL13t9SGfseRtgEY",
           authDomain: "pickleball-tct70.firebaseapp.com",
           databaseURL: "https://pickleball-tct70-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -21,7 +21,7 @@
           messagingSenderId: "1015003889551",
           appId: "1:1015003889551:web:609af4b91d27eb7a8a55fa",
           measurementId: "G-CG8E9J8S2W"
-        };
+        };  
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
@@ -139,6 +139,13 @@
         .court-players { background: #ffffff; border: 1px solid #f39c12; padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 13px; text-align: left; line-height: 1.4; }
         .winner-badge { background: #27ae60; color: white; font-weight: bold; padding: 6px 8px; border-radius: 6px; display: block; margin-top: 5px; text-align: center; font-size: 14px; }
 
+        .prizes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 15px 0; }
+        .prize-card { border-radius: 8px; padding: 12px; text-align: center; font-weight: bold; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .prize-1 { background: linear-gradient(135deg, #f1c40f, #f39c12); }
+        .prize-2 { background: linear-gradient(135deg, #bdc3c7, #95a5a6); }
+        .prize-3 { background: linear-gradient(135deg, #e67e22, #d35400); }
+        .prize-4 { background: linear-gradient(135deg, #27ae60, #16a085); }
+
         .serie-title { background: #8e44ad; color: white; padding: 10px; border-radius: 6px; font-size: 18px; font-weight: bold; text-align: center; margin-top: 20px; }
         .knockout-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 15px; }
 
@@ -146,10 +153,14 @@
         .standing-box { border: 1px solid #2980b9; border-radius: 8px; padding: 12px; background: #f4f9fc; overflow-x: auto; }
         .standing-title { font-weight: bold; font-size: 16px; color: #1a5276; text-align: center; margin-bottom: 8px; }
 
-        .teams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 15px; }
+        .teams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 15px; }
         .team-card { border: 1px solid #ccc; border-radius: 8px; padding: 12px; background-color: #fff; border-top: 5px solid #2980b9; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
         .team-title { font-weight: bold; font-size: 16px; color: #1a5276; display: flex; justify-content: space-between; margin-bottom: 8px; }
         
+        /* CSS DÀNH CHO NÚT ĐỔI THỨ TỰ VĐV */
+        .btn-move { background: #3498db; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 11px; cursor: pointer; margin: 0 2px; font-weight: bold; }
+        .btn-move:hover { background: #2980b9; }
+
         .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; }
         .badge-a { background-color: #e74c3c; }
         .badge-b { background-color: #3498db; }
@@ -225,7 +236,7 @@
         </div>
 
         <div class="button-group btc-only" style="display: none;">
-            <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 TẢI DỮ LIỆU</button>
+            <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 TẢI DATA SHEET</button>
             <button class="btn btn-draw" onclick="drawTeams()">🎲 BỐC THĂM TEAM</button>
             <button id="lockBtn" class="btn btn-lock" onclick="toggleLockTeams()">🔒 CHỐT DANH SÁCH VĐV</button>
             <button class="btn btn-reset" onclick="resetAllData()">🗑️ XÓA & BỐC THĂM LẠI</button>
@@ -233,6 +244,28 @@
         </div>
 
         <div id="statusMsg" class="status-msg"></div>
+
+        <div style="margin-top: 15px;">
+            <h3>🎁 CƠ CẤU GIẢI THƯỞNG CHÍNH THỨC</h3>
+            <div class="prizes-grid">
+                <div class="prize-card prize-1">
+                    🥇 HẠNG NHẤT<br>
+                    <span style="font-size:12px; font-weight:normal;">Cúp Vô Địch + Huy chương Nhất</span>
+                </div>
+                <div class="prize-card prize-2">
+                    🥈 HẠNG NHÌ<br>
+                    <span style="font-size:12px; font-weight:normal;">Cúp Hạng Nhì + Huy chương Nhì</span>
+                </div>
+                <div class="prize-card prize-3">
+                    🥉 HẠNG BA<br>
+                    <span style="font-size:12px; font-weight:normal;">Cúp Hạng Ba + Huy chương Ba</span>
+                </div>
+                <div class="prize-card prize-4">
+                    🏅 HẠNG TƯ<br>
+                    <span style="font-size:12px; font-weight:normal;">Giải Cống hiến + Huy chương Cống hiến</span>
+                </div>
+            </div>
+        </div>
 
         <div id="playerListSection" class="player-list-section">
             <h2>Danh Sách VĐV Đăng Ký (Thực tế: <span id="playerCount">0</span> VĐV)</h2>
@@ -273,11 +306,29 @@
     </div>
 
     <div id="knockoutStageTab" style="display: none;">
-        <div class="serie-title" id="serieATitle">🥇 CHUNG KẾT</div>
+        <div class="serie-title" id="serieATitle">🥇 SERIE A (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE A)</div>
         <div class="knockout-grid" id="serieAGrid"></div>
 
-        <div class="serie-title" id="serieBTitle" style="background: #d35400; margin-top: 30px;">🥈 TRANH HẠNG BA</div>
+        <div class="serie-title" id="serieBTitle" style="background: #d35400; margin-top: 30px;">🥈 SERIE B (BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE B)</div>
         <div class="knockout-grid" id="serieBGrid"></div>
+
+        <div id="closingCeremonyBox" style="margin-top: 30px; display: none;">
+            <div style="background: #1a5276; color: white; padding: 12px; border-radius: 8px 8px 0 0; font-weight: bold; font-size: 18px; text-align: center;">
+                🎉 TỔNG KẾT TRAO GIẢI BẾ MẠC
+            </div>
+            <div style="border: 2px solid #1a5276; padding: 15px; border-radius: 0 0 8px 8px; background: #ffffff;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 120px;">Hạng vị trí</th>
+                            <th>Đội đoạt giải</th>
+                            <th>Phần thưởng danh dự</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ceremonyTableBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -357,7 +408,6 @@ function generateSchedule() {
     const mainTabSelector = document.getElementById('mainTabSelector');
 
     if (totalTeams === 4) {
-        // TRƯỜNG HỢP 4 TEAM - ĐẤU SONG SONG TRÊN 2 SÂN
         mainTabSelector.style.display = 'flex';
         roundSchedule = [
             {
@@ -484,7 +534,7 @@ function toggleAuthRole() {
         currentRole = 'guest';
         alert("🔒 Đã chuyển về giao diện Khán giả.");
     } else {
-        const pin = prompt("Nhập mã");
+        const pin = prompt("Nhập mã PIN (1234: Trọng tài | 1956: BTC):");
         if (pin === PIN_BTC) {
             currentRole = 'btc';
             alert("👑 Đã đăng nhập vai trò BAN TỔ CHỨC!");
@@ -517,6 +567,7 @@ function updateAccessControl() {
     const playerSection = document.getElementById('playerListSection');
     if (playerSection) { playerSection.style.display = (currentRole === 'referee') ? 'none' : 'block'; }
 
+    renderResultsByGroups(generatedTeams);
     renderCourts();
     renderKnockoutMatches();
 }
@@ -628,6 +679,33 @@ function drawTeams() {
     }
 
     generateSchedule();
+}
+
+/* HÀM XỬ LÝ TRÁO ĐỔI VỊ TRÍ VĐV TRONG TEAM */
+function moveMember(teamIdx, memberIdx, direction) {
+    if (currentRole !== 'btc') {
+        alert("❌ Chỉ Ban tổ chức mới có quyền thay đổi thứ tự VĐV!");
+        return;
+    }
+
+    const team = generatedTeams[teamIdx];
+    if (!team || !team.members) return;
+
+    const newIndex = memberIdx + direction;
+    if (newIndex < 0 || newIndex >= team.members.length) return; // Vượt quá chỉ số mảng
+
+    // Tráo đổi vị trí 2 VĐV
+    const temp = team.members[memberIdx];
+    team.members[memberIdx] = team.members[newIndex];
+    team.members[newIndex] = temp;
+
+    // Cập nhật lại giao diện và đồng bộ lên Firebase Database
+    renderResultsByGroups(generatedTeams);
+    renderCourts();
+
+    if (window.dbSet && window.dbTeamsRef) {
+        window.dbSet(window.dbTeamsRef, { teams: generatedTeams, locked: isTeamsLocked });
+    }
 }
 
 function renderCourts() {
@@ -809,7 +887,6 @@ function updateStandings() {
 
         return { groupA: groupAStats, groupB: groupBStats };
     } else {
-        // TRƯỜNG HỢP 4 TEAM: HIỂN THỊ 1 BẢNG XẾP HẠNG CHUNG
         container.innerHTML = `
             <div style="overflow-x: auto;">
                 <table>
@@ -905,10 +982,10 @@ function renderKnockoutMatches() {
     const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 4;
 
     const serieATitle = document.getElementById('serieATitle');
-    if (serieATitle) serieATitle.innerText = `🥇 CHUNG KẾT (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    if (serieATitle) serieATitle.innerText = `🥇 TRANH HẠNG NHẤT & NHÌ (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
 
     const serieBTitle = document.getElementById('serieBTitle');
-    if (serieBTitle) serieBTitle.innerText = `🥈 TRANH HẠNG BA (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
+    if (serieBTitle) serieBTitle.innerText = `🥈 TRANH HẠNG BA & CỐNG HIẾN (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
 
     let team1 = 'Đội 1', team2 = 'Đội 2', team3 = 'Đội 3', team4 = 'Đội 4';
 
@@ -922,15 +999,59 @@ function renderKnockoutMatches() {
     const serieAGrid = document.getElementById('serieAGrid');
     if (serieAGrid) {
         serieAGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT (SÂN 1)', team1, team2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalA', 'TRANH HẠNG NHẤT & NHÌ (SÂN 1)', team1, team2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
         `;
     }
 
     const serieBGrid = document.getElementById('serieBGrid');
     if (serieBGrid) {
         serieBGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalB', 'TRANH HẠNG 3 (SÂN 2)', team3, team4, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalB', 'TRANH HẠNG BA & CỐNG HIẾN (SÂN 2)', team3, team4, knockoutData.finalB || {score1:0, score2:0, finished:false})}
         `;
+    }
+
+    const closingBox = document.getElementById('closingCeremonyBox');
+    const ceremonyBody = document.getElementById('ceremonyTableBody');
+    if (closingBox && ceremonyBody) {
+        const finalA = knockoutData.finalA || {};
+        const finalB = knockoutData.finalB || {};
+
+        if ((finalA.finished || finalA.score1 >= knockoutWinningScore || finalA.score2 >= knockoutWinningScore) &&
+            (finalB.finished || finalB.score1 >= knockoutWinningScore || finalB.score2 >= knockoutWinningScore)) {
+            
+            closingBox.style.display = 'block';
+
+            let winnerA = finalA.score1 > finalA.score2 ? team1 : team2;
+            let runnerA = finalA.score1 > finalA.score2 ? team2 : team1;
+
+            let winnerB = finalB.score1 > finalB.score2 ? team3 : team4;
+            let runnerB = finalB.score1 > finalB.score2 ? team4 : team3;
+
+            ceremonyBody.innerHTML = `
+                <tr>
+                    <td style="text-align:center; font-weight:bold; color:#f39c12;">🥇 HẠNG NHẤT</td>
+                    <td><b>${winnerA}</b></td>
+                    <td>Cúp Vô Địch + Huy chương Hạng Nhất</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center; font-weight:bold; color:#7f8c8d;">🥈 HẠNG NHÌ</td>
+                    <td><b>${runnerA}</b></td>
+                    <td>Cúp Hạng Nhì + Huy chương Hạng Nhì</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center; font-weight:bold; color:#d35400;">🥉 HẠNG BA</td>
+                    <td><b>${winnerB}</b></td>
+                    <td>Cúp Hạng Ba + Huy chương Hạng Ba</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center; font-weight:bold; color:#27ae60;">🏅 HẠNG TƯ</td>
+                    <td><b>${runnerB}</b></td>
+                    <td>Giải Cống hiến + Huy chương Cống hiến</td>
+                </tr>
+            `;
+        } else {
+            closingBox.style.display = 'none';
+        }
     }
 }
 
@@ -1148,21 +1269,32 @@ function renderResultsByGroups(teams) {
 
     const singleGrid = document.createElement('div');
     singleGrid.className = 'teams-grid';
-    teams.forEach(team => { singleGrid.appendChild(createTeamCardElement(team)); });
+    teams.forEach((team, tIdx) => { singleGrid.appendChild(createTeamCardElement(team, tIdx)); });
     grid.appendChild(singleGrid);
 }
 
-function createTeamCardElement(team) {
+/* HIỂN THỊ THẺ ĐỘI VÀ CÁC NÚT ĐỔI THỨ TỰ CHO VĐV */
+function createTeamCardElement(team, tIdx) {
     let rowsHTML = '';
+    const isBtc = (currentRole === 'btc');
+
     team.members.forEach((m, idx) => {
         const genderClass = m.gender === 'Nữ' ? 'gender-f' : 'gender-m';
         const badgeClass = m.level === 'A' ? 'badge-a' : 'badge-b';
+        
+        let actionCell = isBtc ? `
+            <td style="text-align:center;">
+                <button class="btn-move" onclick="moveMember(${tIdx}, ${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>⬆</button>
+                <button class="btn-move" onclick="moveMember(${tIdx}, ${idx}, 1)" ${idx === team.members.length - 1 ? 'disabled' : ''}>⬇</button>
+            </td>` : '';
+
         rowsHTML += `
             <tr>
                 <td style="text-align:center;"><b>${idx + 1}</b></td>
                 <td>${m.name}</td>
                 <td style="text-align:center;"><span class="${genderClass}">${m.gender}</span></td>
                 <td style="text-align:center;"><span class="badge ${badgeClass}">${m.level}</span></td>
+                ${actionCell}
             </tr>`;
     });
 
@@ -1176,10 +1308,11 @@ function createTeamCardElement(team) {
         <table>
             <thead>
                 <tr>
-                    <th style="width:40px; text-align:center;">STT</th>
+                    <th style="width:35px; text-align:center;">STT</th>
                     <th>Họ và tên</th>
                     <th style="width:35px; text-align:center;">GT</th>
                     <th style="width:45px; text-align:center;">Trình</th>
+                    ${isBtc ? '<th style="width:65px; text-align:center;">Thao tác</th>' : ''}
                 </tr>
             </thead>
             <tbody>${rowsHTML}</tbody>
