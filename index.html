@@ -21,7 +21,7 @@
           messagingSenderId: "1015003889551",
           appId: "1:1015003889551:web:609af4b91d27eb7a8a55fa",
           measurementId: "G-CG8E9J8S2W"
-        };  
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
@@ -157,7 +157,10 @@
         .team-card { border: 1px solid #ccc; border-radius: 8px; padding: 12px; background-color: #fff; border-top: 5px solid #2980b9; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
         .team-title { font-weight: bold; font-size: 16px; color: #1a5276; display: flex; justify-content: space-between; margin-bottom: 8px; }
         
-        /* CSS DÀNH CHO NÚT ĐỔI THỨ TỰ VĐV */
+        .btn-edit { background: #f39c12; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; margin-right: 2px; }
+        .btn-edit:hover { background: #d35400; }
+        .btn-delete { background: #e74c3c; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
+        .btn-delete:hover { background: #c0392b; }
         .btn-move { background: #3498db; color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 11px; cursor: pointer; margin: 0 2px; font-weight: bold; }
         .btn-move:hover { background: #2980b9; }
 
@@ -236,7 +239,7 @@
         </div>
 
         <div class="button-group btc-only" style="display: none;">
-            <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 TẢI DATA SHEET</button>
+            <button class="btn btn-realtime" onclick="fetchRealtimeData()">🔄 TẢI DỮ LIỆU</button>
             <button class="btn btn-draw" onclick="drawTeams()">🎲 BỐC THĂM TEAM</button>
             <button id="lockBtn" class="btn btn-lock" onclick="toggleLockTeams()">🔒 CHỐT DANH SÁCH VĐV</button>
             <button class="btn btn-reset" onclick="resetAllData()">🗑️ XÓA & BỐC THĂM LẠI</button>
@@ -269,7 +272,7 @@
 
         <div id="playerListSection" class="player-list-section">
             <h2>Danh Sách VĐV Đăng Ký (Thực tế: <span id="playerCount">0</span> VĐV)</h2>
-            <div style="max-height: 180px; overflow-y: auto;">
+            <div style="max-height: 220px; overflow-y: auto;">
                 <table>
                     <thead>
                         <tr>
@@ -277,10 +280,11 @@
                             <th>Họ và tên</th>
                             <th style="width: 70px;">Giới tính</th>
                             <th style="width: 80px;">Trình độ</th>
+                            <th class="btc-only" style="width: 110px; display: none;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="playerTableBody">
-                        <tr><td colspan="4" style="text-align:center;">Đang tải dữ liệu...</td></tr>
+                        <tr><td colspan="5" style="text-align:center;">Đang tải dữ liệu...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -534,7 +538,7 @@ function toggleAuthRole() {
         currentRole = 'guest';
         alert("🔒 Đã chuyển về giao diện Khán giả.");
     } else {
-        const pin = prompt("Nhập mã PIN (1234: Trọng tài | 1956: BTC):");
+        const pin = prompt("Nhập mã");
         if (pin === PIN_BTC) {
             currentRole = 'btc';
             alert("👑 Đã đăng nhập vai trò BAN TỔ CHỨC!");
@@ -567,6 +571,7 @@ function updateAccessControl() {
     const playerSection = document.getElementById('playerListSection');
     if (playerSection) { playerSection.style.display = (currentRole === 'referee') ? 'none' : 'block'; }
 
+    renderInputTable(currentPlayers);
     renderResultsByGroups(generatedTeams);
     renderCourts();
     renderKnockoutMatches();
@@ -681,7 +686,110 @@ function drawTeams() {
     generateSchedule();
 }
 
-/* HÀM XỬ LÝ TRÁO ĐỔI VỊ TRÍ VĐV TRONG TEAM */
+/* HÀM CHỈNH SỬA THÔNG TIN CỦA MỘT VĐV */
+function editPlayer(index) {
+    if (currentRole !== 'btc') {
+        alert("❌ Chỉ Ban tổ chức mới có quyền chỉnh sửa thông tin VĐV!");
+        return;
+    }
+
+    const player = currentPlayers[index];
+    if (!player) return;
+
+    const newName = prompt("Nhập Họ và Tên mới của VĐV:", player.name);
+    if (newName === null) return;
+
+    let newGender = prompt("Nhập Giới tính (Nam / Nữ):", player.gender);
+    if (newGender === null) return;
+    newGender = newGender.trim();
+    if (newGender !== 'Nam' && newGender !== 'Nữ') {
+        alert("Giới tính phải là 'Nam' hoặc 'Nữ'!");
+        return;
+    }
+
+    let newLevel = prompt("Nhập Trình độ (A / B):", player.level);
+    if (newLevel === null) return;
+    newLevel = newLevel.trim().toUpperCase();
+    if (newLevel !== 'A' && newLevel !== 'B') {
+        alert("Trình độ phải là 'A' hoặc 'B'!");
+        return;
+    }
+
+    const oldName = player.name;
+
+    player.name = newName.trim();
+    player.gender = newGender;
+    player.level = newLevel;
+
+    if (generatedTeams && generatedTeams.length > 0) {
+        generatedTeams.forEach(team => {
+            team.members.forEach(m => {
+                if (m.name === oldName) {
+                    m.name = player.name;
+                    m.gender = player.gender;
+                    m.level = player.level;
+                }
+            });
+            team.countA = team.members.filter(m => m.level === 'A').length;
+            team.countB = team.members.filter(m => m.level === 'B').length;
+        });
+
+        if (window.dbSet && window.dbTeamsRef) {
+            window.dbSet(window.dbTeamsRef, { teams: generatedTeams, locked: isTeamsLocked });
+        }
+    }
+
+    renderInputTable(currentPlayers);
+    renderResultsByGroups(generatedTeams);
+    renderCourts();
+
+    alert(`✅ Đã cập nhật VĐV thành: ${player.name} (${player.gender} - Trình ${player.level})`);
+}
+
+/* HÀM XÓA VĐV KHỎI DANH SÁCH VÀ ĐỘI BÓNG */
+function deletePlayer(index) {
+    if (currentRole !== 'btc') {
+        alert("❌ Chỉ Ban tổ chức mới có quyền xóa VĐV!");
+        return;
+    }
+
+    const player = currentPlayers[index];
+    if (!player) return;
+
+    if (!confirm(`⚠️ Bạn có chắc chắn muốn XÓA VĐV "${player.name}" khỏi danh sách thi đấu không?`)) {
+        return;
+    }
+
+    const deletedName = player.name;
+
+    // 1. Xóa VĐV khỏi mảng currentPlayers
+    currentPlayers.splice(index, 1);
+
+    // 2. Cập nhật lại số lượng VĐV hiển thị trên ô nhập
+    document.getElementById('targetPlayerCount').value = currentPlayers.length;
+
+    // 3. Xóa VĐV trong mảng generatedTeams nếu đã chia đội
+    if (generatedTeams && generatedTeams.length > 0) {
+        generatedTeams.forEach(team => {
+            team.members = team.members.filter(m => m.name !== deletedName);
+            team.countA = team.members.filter(m => m.level === 'A').length;
+            team.countB = team.members.filter(m => m.level === 'B').length;
+        });
+
+        if (window.dbSet && window.dbTeamsRef) {
+            window.dbSet(window.dbTeamsRef, { teams: generatedTeams, locked: isTeamsLocked });
+        }
+    }
+
+    // 4. Vẽ lại giao diện
+    renderInputTable(currentPlayers);
+    renderResultsByGroups(generatedTeams);
+    renderCourts();
+    recalculateTeamsCount();
+
+    alert(`✅ Đã xóa VĐV "${deletedName}" thành công!`);
+}
+
 function moveMember(teamIdx, memberIdx, direction) {
     if (currentRole !== 'btc') {
         alert("❌ Chỉ Ban tổ chức mới có quyền thay đổi thứ tự VĐV!");
@@ -692,14 +800,12 @@ function moveMember(teamIdx, memberIdx, direction) {
     if (!team || !team.members) return;
 
     const newIndex = memberIdx + direction;
-    if (newIndex < 0 || newIndex >= team.members.length) return; // Vượt quá chỉ số mảng
+    if (newIndex < 0 || newIndex >= team.members.length) return;
 
-    // Tráo đổi vị trí 2 VĐV
     const temp = team.members[memberIdx];
     team.members[memberIdx] = team.members[newIndex];
     team.members[newIndex] = temp;
 
-    // Cập nhật lại giao diện và đồng bộ lên Firebase Database
     renderResultsByGroups(generatedTeams);
     renderCourts();
 
@@ -999,14 +1105,14 @@ function renderKnockoutMatches() {
     const serieAGrid = document.getElementById('serieAGrid');
     if (serieAGrid) {
         serieAGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalA', 'TRANH HẠNG NHẤT & NHÌ (SÂN 1)', team1, team2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT (SÂN 1)', team1, team2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
         `;
     }
 
     const serieBGrid = document.getElementById('serieBGrid');
     if (serieBGrid) {
         serieBGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalB', 'TRANH HẠNG BA & CỐNG HIẾN (SÂN 2)', team3, team4, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalB', 'TRANH HẠNG BA (SÂN 2)', team3, team4, knockoutData.finalB || {score1:0, score2:0, finished:false})}
         `;
     }
 
@@ -1240,18 +1346,29 @@ async function fetchRealtimeData() {
     }
 }
 
+/* RENDERING BẢNG DANH SÁCH CÓ NÚT SỬA VÀ XÓA DÀNH CHO BTC */
 function renderInputTable(players) {
     const tbody = document.getElementById('playerTableBody');
     document.getElementById('playerCount').innerText = players.length;
     tbody.innerHTML = '';
 
+    const isBtc = (currentRole === 'btc');
+
     players.forEach((player, index) => {
         const tr = document.createElement('tr');
+        
+        let actionsHTML = isBtc ? `
+            <td style="text-align:center;">
+                <button class="btn-edit" onclick="editPlayer(${index})">✏️ Sửa</button>
+                <button class="btn-delete" onclick="deletePlayer(${index})">🗑️ Xóa</button>
+            </td>` : '';
+
         tr.innerHTML = `
             <td style="text-align:center;">${index + 1}</td>
             <td><b>${player.name}</b></td>
             <td><span class="${player.gender === 'Nữ' ? 'gender-f' : 'gender-m'}">${player.gender}</span></td>
             <td><span class="badge ${player.level === 'A' ? 'badge-a' : 'badge-b'}">Trình ${player.level}</span></td>
+            ${actionsHTML}
         `;
         tbody.appendChild(tr);
     });
@@ -1273,7 +1390,6 @@ function renderResultsByGroups(teams) {
     grid.appendChild(singleGrid);
 }
 
-/* HIỂN THỊ THẺ ĐỘI VÀ CÁC NÚT ĐỔI THỨ TỰ CHO VĐV */
 function createTeamCardElement(team, tIdx) {
     let rowsHTML = '';
     const isBtc = (currentRole === 'btc');
