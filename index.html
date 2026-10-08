@@ -633,6 +633,10 @@ function drawTeams() {
     generateSchedule();
 }
 
+/**
+ * Hàm chỉnh sửa thông tin VĐV từ danh sách gốc
+ * Tự động cập nhật tên mới vào danh sách Team đã chia
+ */
 function editPlayer(index) {
     if (currentRole !== 'btc') {
         alert("❌ Chỉ Ban tổ chức mới có quyền chỉnh sửa thông tin VĐV!");
@@ -642,8 +646,10 @@ function editPlayer(index) {
     const player = currentPlayers[index];
     if (!player) return;
 
+    const oldName = player.name; // Lưu lại tên cũ để tìm kiếm trong Team
+
     const newName = prompt("Nhập Họ và Tên mới của VĐV:", player.name);
-    if (newName === null) return;
+    if (newName === null || newName.trim() === "") return;
 
     let newGender = prompt("Nhập Giới tính (Nam / Nữ):", player.gender);
     if (newGender === null) return;
@@ -661,35 +667,75 @@ function editPlayer(index) {
         return;
     }
 
-    const oldName = player.name;
-
+    // 1. Cập nhật thông tin trong danh sách VĐV gốc
     player.name = newName.trim();
     player.gender = newGender;
     player.level = newLevel;
 
+    // 2. Tự động cập nhật tên mới vào danh sách Team đã chia (generatedTeams)
     if (generatedTeams && generatedTeams.length > 0) {
         generatedTeams.forEach(team => {
-            team.members.forEach(m => {
-                if (m.name === oldName) {
-                    m.name = player.name;
-                    m.gender = player.gender;
-                    m.level = player.level;
+            team.members.forEach(member => {
+                if (member.name === oldName) {
+                    member.name = player.name;
+                    member.gender = player.gender;
+                    member.level = player.level;
                 }
             });
+            // Cập nhật lại thống kê số lượng trình A/B của Team
             team.countA = team.members.filter(m => m.level === 'A').length;
             team.countB = team.members.filter(m => m.level === 'B').length;
         });
 
+        // Đồng bộ dữ liệu Team đã sửa lên Firebase Realtime Database
         if (window.dbSet && window.dbTeamsRef) {
             window.dbSet(window.dbTeamsRef, { teams: generatedTeams, locked: isTeamsLocked });
         }
     }
 
+    // 3. Render lại giao diện
     renderInputTable(currentPlayers);
     renderResultsByGroups(generatedTeams);
     renderCourts();
 
-    alert(`✅ Đã cập nhật VĐV thành: ${player.name} (${player.gender} - Trình ${player.level})`);
+    alert(`✅ Đã cập nhật VĐV "${oldName}" thành "${player.name}" trong toàn bộ hệ thống!`);
+}
+
+/**
+ * Hàm sửa tên VĐV trực tiếp trong thẻ Team
+ */
+function editTeamMember(teamIdx, memberIdx) {
+    if (currentRole !== 'btc') {
+        alert("❌ Chỉ Ban tổ chức mới có quyền sửa thành viên trong Team!");
+        return;
+    }
+
+    const team = generatedTeams[teamIdx];
+    if (!team || !team.members[memberIdx]) return;
+
+    const member = team.members[memberIdx];
+    const oldName = member.name;
+
+    const newName = prompt(`Sửa tên VĐV "${oldName}" trong ${team.name}:`, oldName);
+    if (newName === null || newName.trim() === "") return;
+
+    // Cập nhật tên trong Team
+    member.name = newName.trim();
+
+    // Cập nhật ngược lại danh sách VĐV gốc nếu tìm thấy
+    const originalPlayer = currentPlayers.find(p => p.name === oldName);
+    if (originalPlayer) {
+        originalPlayer.name = member.name;
+    }
+
+    // Render lại giao diện và lưu lên Firebase
+    renderInputTable(currentPlayers);
+    renderResultsByGroups(generatedTeams);
+    renderCourts();
+
+    if (window.dbSet && window.dbTeamsRef) {
+        window.dbSet(window.dbTeamsRef, { teams: generatedTeams, locked: isTeamsLocked });
+    }
 }
 
 function deletePlayer(index) {
@@ -1408,10 +1454,11 @@ function createTeamCardElement(team, tIdx) {
         
         let actionCell = isBtc ? `
             <td style="text-align:center;">
+                <button class="btn-edit" onclick="editTeamMember(${tIdx}, ${idx})">✏️</button>
                 <button class="btn-move" onclick="moveMember(${tIdx}, ${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>⬆</button>
                 <button class="btn-move" onclick="moveMember(${tIdx}, ${idx}, 1)" ${idx === team.members.length - 1 ? 'disabled' : ''}>⬇</button>
             </td>` : '';
-
+    
         rowsHTML += `
             <tr>
                 <td style="text-align:center;"><b>${idx + 1}</b></td>
