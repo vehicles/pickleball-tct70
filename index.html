@@ -1069,14 +1069,18 @@ function switchMainTab(tab) {
  * Hàm hiển thị và cập nhật kết quả Vòng trong (Knockout - Serie A & Serie B)
  * Tự động tính toán các đội đoạt giải và hiển thị Bảng Tổng kết Bế mạc
  */
+/**
+ * Hàm hiển thị và cập nhật kết quả Vòng trong (Knockout - Serie A & Serie B)
+ * Lấy chính xác danh sách VĐV từ kết quả xếp hạng Vòng bảng và kết quả Bán kết
+ */
 function renderKnockoutMatches() {
-    // 1. Cập nhật bảng xếp hạng Vòng bảng để lấy danh sách đội
+    // 1. Cập nhật và lấy bảng xếp hạng Vòng bảng
     const standings = updateStandings();
     if (!standings) return;
 
     const totalTeams = parseInt(document.getElementById('customTeamCount').value) || 6;
 
-    // 2. Cập nhật tiêu đề hiển thị điểm thắng cho từng Serie
+    // 2. Cập nhật tiêu đề hiển thị
     const serieATitle = document.getElementById('serieATitle');
     if (serieATitle) {
         serieATitle.innerText = `🥇 SERIE A - BÁN KẾT, TRANH HẠNG BA & CHUNG KẾT SERIE A (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
@@ -1087,73 +1091,105 @@ function renderKnockoutMatches() {
         serieBTitle.innerText = `🏆 SERIE B - CHUNG KẾT SERIE B (CHẠM ${knockoutWinningScore} ĐIỂM THẮNG)`;
     }
 
-    // 3. Khai báo các tên đội mặc định theo suất Vòng bảng
-    let teamSF1_1 = 'Hạng 1A', teamSF1_2 = 'Hạng 2B';
-    let teamSF2_1 = 'Hạng 1B', teamSF2_2 = 'Hạng 2A';
-    let teamB_1 = 'Hạng 3A', teamB_2 = 'Hạng 3B';
+    // 3. Khai báo tên hiển thị mặc định và Đối tượng Team chứa danh sách VĐV
+    let teamSF1_1Name = 'Hạng 1A', teamSF1_2Name = 'Hạng 2B';
+    let teamSF2_1Name = 'Hạng 1B', teamSF2_2Name = 'Hạng 2A';
+    let teamB_1Name = 'Hạng 3A', teamB_2Name = 'Hạng 3B';
 
-    // Gán tên đội thực tế từ Bảng xếp hạng Vòng bảng
+    let objSF1_1 = null, objSF1_2 = null;
+    let objSF2_1 = null, objSF2_2 = null;
+    let objB_1 = null, objB_2 = null;
+
+    // LẤY TRỰC TIẾP ĐỐI TƯỢNG TEAM TỪ KẾT QUẢ XẾP HẠNG VÒNG BẢNG
     if (totalTeams === 6 && standings.groupA && standings.groupB) {
-        teamSF1_1 = standings.groupA[0]?.name || 'Hạng 1A';
-        teamSF1_2 = standings.groupB[1]?.name || 'Hạng 2B';
+        // Tên đội
+        teamSF1_1Name = standings.groupA[0]?.name || 'Hạng 1A';
+        teamSF1_2Name = standings.groupB[1]?.name || 'Hạng 2B';
 
-        teamSF2_1 = standings.groupB[0]?.name || 'Hạng 1B';
-        teamSF2_2 = standings.groupA[1]?.name || 'Hạng 2A';
+        teamSF2_1Name = standings.groupB[0]?.name || 'Hạng 1B';
+        teamSF2_2Name = standings.groupA[1]?.name || 'Hạng 2A';
 
-        teamB_1 = standings.groupA[2]?.name || 'Hạng 3A';
-        teamB_2 = standings.groupB[2]?.name || 'Hạng 3B';
+        teamB_1Name = standings.groupA[2]?.name || 'Hạng 3A';
+        teamB_2Name = standings.groupB[2]?.name || 'Hạng 3B';
+
+        // Lấy đối tượng Team tương ứng từ mảng generatedTeams chứa đầy đủ mảng members VĐV
+        objSF1_1 = generatedTeams.find(t => t.name === teamSF1_1Name) || null;
+        objSF1_2 = generatedTeams.find(t => t.name === teamSF1_2Name) || null;
+
+        objSF2_1 = generatedTeams.find(t => t.name === teamSF2_1Name) || null;
+        objSF2_2 = generatedTeams.find(t => t.name === teamSF2_2Name) || null;
+
+        objB_1 = generatedTeams.find(t => t.name === teamB_1Name) || null;
+        objB_2 = generatedTeams.find(t => t.name === teamB_2Name) || null;
     } else if (totalTeams === 4 && standings.all) {
-        teamSF1_1 = standings.all[0]?.name || 'Hạng 1';
-        teamSF1_2 = standings.all[1]?.name || 'Hạng 2';
-        teamB_1 = standings.all[2]?.name || 'Hạng 3';
-        teamB_2 = standings.all[3]?.name || 'Hạng 4';
+        teamSF1_1Name = standings.all[0]?.name || 'Hạng 1';
+        teamSF1_2Name = standings.all[1]?.name || 'Hạng 2';
+        teamB_1Name = standings.all[2]?.name || 'Hạng 3';
+        teamB_2Name = standings.all[3]?.name || 'Hạng 4';
+
+        objSF1_1 = generatedTeams.find(t => t.name === teamSF1_1Name) || null;
+        objSF1_2 = generatedTeams.find(t => t.name === teamSF1_2Name) || null;
+
+        objB_1 = generatedTeams.find(t => t.name === teamB_1Name) || null;
+        objB_2 = generatedTeams.find(t => t.name === teamB_2Name) || null;
     }
 
-    // 4. Lấy dữ liệu điểm số các trận Bán kết
+    // 4. Lấy dữ liệu tỷ số các trận Bán kết
     const sf1A = knockoutData.sf1A || { score1: 0, score2: 0, finished: false };
     const sf2A = knockoutData.sf2A || { score1: 0, score2: 0, finished: false };
 
     let winnerSF1 = 'Thắng BK 1', loserSF1 = 'Thua BK 1';
     let winnerSF2 = 'Thắng BK 2', loserSF2 = 'Thua BK 2';
 
-    // Xác định đội thắng/thua Bán kết 1
+    let objWinnerSF1 = null, objLoserSF1 = null;
+    let objWinnerSF2 = null, objLoserSF2 = null;
+
+    // XÁC ĐỊNH ĐỘI THẮNG/THUA BÁN KẾT 1 VÀ CHUYỂN DỮ LIỆU VĐV SANG CHUNG KẾT / TRANH HẠNG BA
     if (sf1A.finished || sf1A.score1 >= knockoutWinningScore || sf1A.score2 >= knockoutWinningScore) {
-        winnerSF1 = sf1A.score1 > sf1A.score2 ? teamSF1_1 : teamSF1_2;
-        loserSF1 = sf1A.score1 > sf1A.score2 ? teamSF1_2 : teamSF1_1;
+        const isTeam1Win = sf1A.score1 > sf1A.score2;
+        winnerSF1 = isTeam1Win ? teamSF1_1Name : teamSF1_2Name;
+        loserSF1 = isTeam1Win ? teamSF1_2Name : teamSF1_1Name;
+
+        objWinnerSF1 = isTeam1Win ? objSF1_1 : objSF1_2;
+        objLoserSF1 = isTeam1Win ? objSF1_2 : objSF1_1;
     }
 
-    // Xác định đội thắng/thua Bán kết 2
+    // XÁC ĐỊNH ĐỘI THẮNG/THUA BÁN KẾT 2 VÀ CHUYỂN DỮ LIỆU VĐV SANG CHUNG KẾT / TRANH HẠNG BA
     if (sf2A.finished || sf2A.score1 >= knockoutWinningScore || sf2A.score2 >= knockoutWinningScore) {
-        winnerSF2 = sf2A.score1 > sf2A.score2 ? teamSF2_1 : teamSF2_2;
-        loserSF2 = sf2A.score1 > sf2A.score2 ? teamSF2_2 : teamSF2_1;
+        const isTeam1Win = sf2A.score1 > sf2A.score2;
+        winnerSF2 = isTeam1Win ? teamSF2_1Name : teamSF2_2Name;
+        loserSF2 = isTeam1Win ? teamSF2_2Name : teamSF2_1Name;
+
+        objWinnerSF2 = isTeam1Win ? objSF2_1 : objSF2_2;
+        objLoserSF2 = isTeam1Win ? objSF2_2 : objSF2_1;
     }
 
-    // 5. Vẽ khung các trận đấu Serie A
+    // 5. Hiển thị khung các trận Serie A kèm danh sách VĐV ra sân
     const serieAGrid = document.getElementById('serieAGrid');
     if (serieAGrid) {
         if (totalTeams === 6) {
             serieAGrid.innerHTML = `
-                ${createKnockoutBoxHTML('sf1A', 'BÁN KẾT 1 SERIE A (SÂN 1)', teamSF1_1, teamSF1_2, sf1A)}
-                ${createKnockoutBoxHTML('sf2A', 'BÁN KẾT 2 SERIE A (SÂN 2)', teamSF2_1, teamSF2_2, sf2A)}
-                ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA SERIE A (SÂN 1)', loserSF1, loserSF2, knockoutData.bronzeA || {score1:0, score2:0, finished:false})}
-                ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 2)', winnerSF1, winnerSF2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('sf1A', 'BÁN KẾT 1 SERIE A (SÂN 1)', teamSF1_1Name, teamSF1_2Name, sf1A, objSF1_1, objSF1_2)}
+                ${createKnockoutBoxHTML('sf2A', 'BÁN KẾT 2 SERIE A (SÂN 2)', teamSF2_1Name, teamSF2_2Name, sf2A, objSF2_1, objSF2_2)}
+                ${createKnockoutBoxHTML('bronzeA', 'TRANH HẠNG BA SERIE A (SÂN 1)', loserSF1, loserSF2, knockoutData.bronzeA || {score1:0, score2:0, finished:false}, objLoserSF1, objLoserSF2)}
+                ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 2)', winnerSF1, winnerSF2, knockoutData.finalA || {score1:0, score2:0, finished:false}, objWinnerSF1, objWinnerSF2)}
             `;
         } else {
             serieAGrid.innerHTML = `
-                ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 1)', teamSF1_1, teamSF1_2, knockoutData.finalA || {score1:0, score2:0, finished:false})}
+                ${createKnockoutBoxHTML('finalA', 'CHUNG KẾT SERIE A (SÂN 1)', teamSF1_1Name, teamSF1_2Name, knockoutData.finalA || {score1:0, score2:0, finished:false}, objSF1_1, objSF1_2)}
             `;
         }
     }
 
-    // 6. Vẽ khung trận đấu Serie B
+    // 6. Hiển thị khung trận Serie B kèm danh sách VĐV ra sân
     const serieBGrid = document.getElementById('serieBGrid');
     if (serieBGrid) {
         serieBGrid.innerHTML = `
-            ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B (SÂN 2)', teamB_1, teamB_2, knockoutData.finalB || {score1:0, score2:0, finished:false})}
+            ${createKnockoutBoxHTML('finalB', 'CHUNG KẾT SERIE B (SÂN 2)', teamB_1Name, teamB_2Name, knockoutData.finalB || {score1:0, score2:0, finished:false}, objB_1, objB_2)}
         `;
     }
 
-    // 7. Cập nhật Bảng Tổng kết Trao giải Bế mạc khi các trận Chung kết kết thúc
+    // 7. Cập nhật Bảng Bế mạc khi hoàn tất các trận Chung kết
     const closingBox = document.getElementById('closingCeremonyBox');
     const ceremonyBody = document.getElementById('ceremonyTableBody');
     if (closingBox && ceremonyBody) {
@@ -1161,26 +1197,21 @@ function renderKnockoutMatches() {
         const finalB = knockoutData.finalB || {};
         const bronzeA = knockoutData.bronzeA || {};
 
-        // Kiểm tra nếu cả 2 trận Chung kết đã kết thúc
         if ((finalA.finished || finalA.score1 >= knockoutWinningScore || finalA.score2 >= knockoutWinningScore) &&
             (finalB.finished || finalB.score1 >= knockoutWinningScore || finalB.score2 >= knockoutWinningScore)) {
             
             closingBox.style.display = 'block';
 
-            // Đội thắng & thua Chung kết Serie A (Nhất & Nhì)
             let winnerA = finalA.score1 > finalA.score2 ? winnerSF1 : winnerSF2;
             let runnerA = finalA.score1 > finalA.score2 ? winnerSF2 : winnerSF1;
 
-            // Đội thắng & thua Tranh Hạng Ba Serie A (Ba & Tư)
             let bronzeWinnerA = bronzeA.score1 > bronzeA.score2 ? loserSF1 : loserSF2;
             let fourthPlaceA = bronzeA.score1 > bronzeA.score2 ? loserSF2 : loserSF1;
 
-            // Đội thắng & thua Chung kết Serie B (Vô địch & Nhì Serie B)
-            let winnerB = finalB.score1 > finalB.score2 ? teamB_1 : teamB_2;
-            let runnerB = finalB.score1 > finalB.score2 ? teamB_2 : teamB_1;
+            let winnerB = finalB.score1 > finalB.score2 ? teamB_1Name : teamB_2Name;
+            let runnerB = finalB.score1 > finalB.score2 ? teamB_2Name : teamB_1Name;
 
-            // Đưa thông tin vào bảng HTML
-            ceremonyTableBody.innerHTML = `
+            ceremonyBody.innerHTML = `
                 <tr>
                     <td style="text-align:center; font-weight:bold; color:#f39c12;">🥇 VÔ ĐỊCH SERIE A</td>
                     <td><b>${winnerA}</b></td>
