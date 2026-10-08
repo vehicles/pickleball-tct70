@@ -1218,7 +1218,7 @@ function renderKnockoutMatches() {
     }
 }
 
-function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData) {
+function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData, team1Obj = null, team2Obj = null) {
     let winnerText = '';
     const isFinished = mData.finished || mData.score1 >= knockoutWinningScore || mData.score2 >= knockoutWinningScore;
 
