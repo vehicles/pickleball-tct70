@@ -1253,12 +1253,28 @@ function createKnockoutBoxHTML(matchKey, title, team1Name, team2Name, mData) {
         </div>
     ` : `<div style="font-size:26px; font-weight:bold; color:#e67e22; margin:8px 0;">${mData.score1} - ${mData.score2}</div>`;
 
+    let playersHTML = '';
+    const totalScore = (mData.score1 || 0) + (mData.score2 || 0);
+    const rotationIndex = Math.floor(totalScore / 5); // Đổi cặp VĐV sau mỗi 5 điểm
+
+    if (team1Obj && team2Obj && team1Obj.members && team2Obj.members) {
+        const p1_1 = team1Obj.members[rotationIndex % team1Obj.members.length]?.name || '';
+        const p1_2 = team1Obj.members[(rotationIndex + 1) % team1Obj.members.length]?.name || '';
+        const p2_1 = team2Obj.members[rotationIndex % team2Obj.members.length]?.name || '';
+        const p2_2 = team2Obj.members[(rotationIndex + 1) % team2Obj.members.length]?.name || '';
+
+        playersHTML = `
+            <b>${team1Name}:</b> <u>${p1_1}</u> & <u>${p1_2}</u><br>
+            <div style="text-align:center; margin:3px 0; font-size:11px; color:#888;">--- VS ---</div>
+            <b>${team2Name}:</b> <u>${p2_1}</u> & <u>${p2_2}</u>
+        `;
+    }    
     return `
         <div class="court-box">
             <div class="court-title">${title}</div>
             <div style="font-size:14px; margin-bottom:8px;"><b>${team1Name}</b> VS <b>${team2Name}</b></div>
             ${controlHTML}
-            ${winnerText}
+            <div class="court-players">${isFinished ? winnerText : playersHTML}</div>
         </div>
     `;
 }
